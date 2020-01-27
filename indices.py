@@ -15,6 +15,9 @@ def ARVI(naip_dir, out_dir):
     out_dir = Folder in which all calculated geotiff's are saved
     '''
     
+    if not os.path.exists(naip_dir):
+        print('NAIP directory not found')
+    
     # Create list with file names
     gdal.PushErrorHandler('CPLQuietErrorHandler')
     gdal.UseExceptions()
@@ -67,6 +70,9 @@ def VARI(naip_dir, out_dir):
     naip_dir = Folder which contains all subfolders of naip imagery
     out_dir = Folder in which all calculated geotiff's are saved
     '''
+    
+    if not os.path.exists(naip_dir):
+        print('NAIP directory not found')
     
     gdal.PushErrorHandler('CPLQuietErrorHandler')
     gdal.UseExceptions()
