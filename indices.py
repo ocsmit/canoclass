@@ -2,8 +2,19 @@ import os
 import numpy as np
 from osgeo import gdal
 
+# TODO: REFORMAT TO USE PROJECT DIRECTORY & OS CREATE OUTPUT DIR IN PROJ DIR
 
 def ARVI(naip_dir, out_dir):
+    '''
+    This function walks through the input NAIP directory and performs the 
+    ARVI calculation on each naip geotiff file and saves each new ARVI 
+    geotiff in the output directory with the prefix 'arvi_'
+    ---
+    Parameters:
+    naip_dir = Folder which contains all subfolders of naip imagery
+    out_dir = Folder in which all calculated geotiff's are saved
+    '''
+    
     # Create list with file names
     gdal.PushErrorHandler('CPLQuietErrorHandler')
     gdal.UseExceptions()
@@ -47,6 +58,21 @@ def ARVI(naip_dir, out_dir):
 
 
 def VARI(naip_dir, out_dir):
+    '''
+    This function walks through the input NAIP directory and performs the 
+    VARI calculation on each naip geotiff file and saves each new VARI 
+    geotiff in the output directory with the prefix 'arvi_'
+    ---
+    Parameters:
+    naip_dir = Folder which contains all subfolders of naip imagery
+    out_dir = Folder in which all calculated geotiff's are saved
+    '''
+    
+    gdal.PushErrorHandler('CPLQuietErrorHandler')
+    gdal.UseExceptions()
+    gdal.AllRegister()
+    np.seterr(divide='ignore', invalid='ignore')
+    
     for dir, subdir, files in os.walk(naip_dir):
         for f in files:
             if f.endswith('.tif'):
