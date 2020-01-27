@@ -17,6 +17,8 @@ def ARVI(naip_dir, out_dir):
     
     if not os.path.exists(naip_dir):
         print('NAIP directory not found')
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
     
     # Create list with file names
     gdal.PushErrorHandler('CPLQuietErrorHandler')
@@ -38,10 +40,8 @@ def ARVI(naip_dir, out_dir):
                 arvi = ((nir_band - (2 * red_band) + blue_band) / (nir_band + (2 * red_band) + blue_band))
                 name = 'arvi_' + str(f)
                 # Save Raster
-                if os.path.exists(os.path.join(out_dir, name)):
-                    print('Already exists')
-                    break
                 if not os.path.exists(os.path.join(out_dir, name)):
+
                     driver = gdal.GetDriverByName('GTiff')
                     metadata = driver.GetMetadata()
                     shape = arvi.shape
@@ -57,6 +57,8 @@ def ARVI(naip_dir, out_dir):
                     dst_ds.GetRasterBand(1).WriteArray(arvi)
                     dst_ds.FlushCache()
                     dst_ds = None
+                    print(name)
+
     print('Finished')
 
 
@@ -73,6 +75,8 @@ def VARI(naip_dir, out_dir):
     
     if not os.path.exists(naip_dir):
         print('NAIP directory not found')
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
     
     gdal.PushErrorHandler('CPLQuietErrorHandler')
     gdal.UseExceptions()
@@ -93,9 +97,6 @@ def VARI(naip_dir, out_dir):
                 vari = ((green_band - red_band) / (green_band + red_band - blue_band))
                 name = 'vari_' + str(f)
                 # Save Raster
-                if os.path.exists(os.path.join(out_dir, name)):
-                    print('Already exists')
-                    break
                 if not os.path.exists(os.path.join(out_dir, name)):
                     driver = gdal.GetDriverByName('GTiff')
                     metadata = driver.GetMetadata()
@@ -112,4 +113,5 @@ def VARI(naip_dir, out_dir):
                     dst_ds.GetRasterBand(1).WriteArray(vari)
                     dst_ds.FlushCache()
                     dst_ds = None
+                    print('name')
     print('Finished')
