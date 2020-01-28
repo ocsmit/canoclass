@@ -11,6 +11,11 @@ from osgeo import gdal
 
 # TODO: REFORMAT TO USE PROJECT DIRECTORY & OS CREATE OUTPUT DIR IN PROJ DIR
 
+def norm(array):
+    array_min, array_max = array.min(), array.max()
+    return ((1 - 0) * ((array - array_min) / (array_max - array_min))) + 1
+
+
 def ARVI(naip_dir, out_dir):
     """
     This function walks through the input NAIP directory and performs the
@@ -35,19 +40,25 @@ def ARVI(naip_dir, out_dir):
 
     for dir, subdir, files in os.walk(naip_dir):
         for f in files:
-            if f.endswith('.tif'):
-                # Open with gdal & create numpy arrays
-                naip = gdal.Open(os.path.join(dir, f))
-                red_band = naip.GetRasterBand(1).ReadAsArray().astype(np.float32)
-                blue_band = naip.GetRasterBand(3).ReadAsArray().astype(np.float32)
-                nir_band = naip.GetRasterBand(4).ReadAsArray().astype(np.float32)
-                snap = naip
+            name = 'arvi_' + str(f)
+            if os.path.exists(os.path.join(out_dir, name)):
+                continue
+            if not os.path.exists(os.path.join(out_dir, name)):
+                if f.endswith('.tif'):
+                    # Open with gdal & create numpy arrays
+                    naip = gdal.Open(os.path.join(dir, f))
+                    red_band = naip.GetRasterBand(1).ReadAsArray().astype(np.float32)
+                    blue_band = naip.GetRasterBand(3).ReadAsArray().astype(np.float32)
+                    nir_band = naip.GetRasterBand(4).ReadAsArray().astype(np.float32)
+                    snap = naip
 
-                # Perform Calculation
-                arvi = ((nir_band - (2 * red_band) + blue_band) / (nir_band + (2 * red_band) + blue_band))
-                name = 'arvi_' + str(f)
-                # Save Raster
-                if not os.path.exists(os.path.join(out_dir, name)):
+                    # Perform Calculation
+                    a = (nir_band - (2 * red_band) + blue_band)
+                    b = (nir_band + (2 * red_band) + blue_band)
+                    arvi = a / b
+                    name = 'arvi_' + str(f)
+                    # Save Raster
+
                     driver = gdal.GetDriverByName('GTiff')
                     metadata = driver.GetMetadata()
                     shape = arvi.shape
@@ -91,19 +102,25 @@ def VARI(naip_dir, out_dir):
 
     for dir, subdir, files in os.walk(naip_dir):
         for f in files:
-            if f.endswith('.tif'):
-                # Open with gdal & create numpy arrays
-                naip = gdal.Open(os.path.join(dir, f))
-                red_band = naip.GetRasterBand(1).ReadAsArray().astype(np.float32)
-                green_band = naip.GetRasterBand(2).ReadAsArray().astype(np.float32)
-                blue_band = naip.GetRasterBand(3).ReadAsArray().astype(np.float32)
-                snap = naip
+            name = 'vari_' + str(f)
+            if os.path.exists(os.path.join(out_dir, name)):
+                continue
+            if not os.path.exists(os.path.join(out_dir, name)):
+                if f.endswith('.tif'):
+                    # Open with gdal & create numpy arrays
+                    naip = gdal.Open(os.path.join(dir, f))
+                    red_band = norm(naip.GetRasterBand(1).ReadAsArray().astype(np.float32))
+                    green_band = norm(naip.GetRasterBand(2).ReadAsArray().astype(np.float32))
+                    blue_band = norm(naip.GetRasterBand(3).ReadAsArray().astype(np.float32))
+                    snap = naip
 
-                # Perform Calculation
-                vari = ((green_band - red_band) / (green_band + red_band - blue_band))
-                name = 'vari_' + str(f)
-                # Save Raster
-                if not os.path.exists(os.path.join(out_dir, name)):
+                    a = (green_band - red_band)
+                    b = (green_band + red_band - blue_band)
+                    # Perform Calculation
+                    vari = a / b
+                    name = 'vari_' + str(f)
+
+                    # Save Raster
                     driver = gdal.GetDriverByName('GTiff')
                     metadata = driver.GetMetadata()
                     shape = vari.shape
