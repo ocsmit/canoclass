@@ -119,5 +119,6 @@ def VARI(naip_dir, out_dir):
                     dst_ds.GetRasterBand(1).WriteArray(vari)
                     dst_ds.FlushCache()
                     dst_ds = None
-                    print('name')
+                    print(name)
+
     print('Finished')
