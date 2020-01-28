@@ -16,6 +16,10 @@ All index functions are stored in `canopy_foss.indicies.py`
 
 * HDD computation time: 6.16 hours hours to proccess all 3,913 ga naip tiles
 
-**VARI:** computation speed still needs to be tested
+**VARI:** 
+
+* HDD computation time: 5:45 hours to process all 3,913 ga naip tiles
+
+ 
 
 
