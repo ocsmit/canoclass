@@ -10,8 +10,12 @@ canopy_foss is a python module created to process large amounts of NAIP imagery 
 
 All index functions are stored in `canopy_foss.indicies.py`
 
-ARVI: 1.45 seconds per calculation or approx. 1:35 hours for full computation of all 3,913 ga naip tiles to NVME SSD. 
+**ARVI** 
 
-VARI: computation speed still needs to be tested
+* SSD computation time: 1.45 seconds per calculation or approx. 1:35 hours for full computation of all 3,913 ga naip tiles to NVME SSD. 
+
+* HDD computation time: 6.16 hours hours to proccess all 3,913 ga naip tiles
+
+**VARI:** computation speed still needs to be tested
 
 
