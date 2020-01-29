@@ -11,10 +11,11 @@ def seperate_qq(naip_qq, num_areas):
   naip_fields = json.loads(qq.ExportToJson())
   
   # total number of blocks / num_areas = 'i'
+  # areas = math.round(i)
   # if not field process_area_id exists:
   #   create field
   # if field process_area_id exists:
   #   for j in naip_qq fields :
-  #       every i fields input j + 1
+  #       every areas fields input j + 1
   
   
