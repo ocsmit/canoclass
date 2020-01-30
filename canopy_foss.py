@@ -6,10 +6,12 @@ from math import ceil
 import geopandas as gpd
 
 
-def create_join_process_naipqq_areas(naip_qq, process_areas, grid_size_deg, output_joined_file):
+def create_join_process_naipqq_areas(naip_qq, process_areas, grid_size_deg,
+                                     output_joined_file):
     '''
-    This function creates a grid based on the extent of the input naip qq shapefile and
-    creates a new shapefile with the naip qq grid containing filenames and process area ID's
+    This function creates a grid based on the extent of the input naip qq
+    shapefile and creates a new shapefile with the naip qq grid containing
+    filenames and process area ID's
 
     The size of each grid is measured in degrees.
 
@@ -51,7 +53,8 @@ def create_join_process_naipqq_areas(naip_qq, process_areas, grid_size_deg, outp
     if os.path.exists(process_areas):
         os.remove(process_areas)
     outDataSource = outDriver.CreateDataSource(process_areas)
-    outLayer = outDataSource.CreateLayer(process_areas, srs, geom_type=ogr.wkbPolygon)
+    outLayer = outDataSource.CreateLayer(process_areas, srs,
+                                         geom_type=ogr.wkbPolygon)
     featureDefn = outLayer.GetLayerDefn()
 
     # create grid cells
@@ -102,4 +105,5 @@ def create_join_process_naipqq_areas(naip_qq, process_areas, grid_size_deg, outp
         os.remove(output_joined_file)
     joined_naip.to_file(output_joined_file)
 
+    print('Finished')
 
