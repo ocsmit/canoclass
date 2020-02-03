@@ -1,13 +1,14 @@
-######################
-# This module is created to automate index calculations for use in canopy classification
+# ############################################################################
+# This module is created to automate index calculations
+# for use in canopy classification
 #
 # Author: Owen Smith, IESA, University of North Georgia
-######################
+##############################################################################
 
 import os
 import numpy as np
 from osgeo import gdal
-
+import canopy_foss.canopy_config_foss as cfg
 
 # TODO: REFORMAT TO USE PROJECT DIRECTORY & OS CREATE OUTPUT DIR IN PROJ DIR
 
@@ -16,7 +17,7 @@ def norm(array):
     return ((1 - 0) * ((array - array_min) / (array_max - array_min))) + 1
 
 
-def ARVI(naip_dir, out_dir):
+def ARVI():
     """
     This function walks through the input NAIP directory and performs the
     ARVI calculation on each naip geotiff file and saves each new ARVI
@@ -26,6 +27,8 @@ def ARVI(naip_dir, out_dir):
     naip_dir = Folder which contains all subfolders of naip imagery
     out_dir = Folder in which all calculated geotiff's are saved
     """
+    naip_dir = cfg.naip_path
+    out_dir = cfg.index_out_path % 'ARVI'
 
     if not os.path.exists(naip_dir):
         print('NAIP directory not found')
@@ -47,9 +50,12 @@ def ARVI(naip_dir, out_dir):
                 if f.endswith('.tif'):
                     # Open with gdal & create numpy arrays
                     naip = gdal.Open(os.path.join(dir, f))
-                    red_band = naip.GetRasterBand(1).ReadAsArray().astype(np.float32)
-                    blue_band = naip.GetRasterBand(3).ReadAsArray().astype(np.float32)
-                    nir_band = naip.GetRasterBand(4).ReadAsArray().astype(np.float32)
+                    red_band = naip.GetRasterBand(1).ReadAsArray()\
+                        .astype(np.float32)
+                    blue_band = naip.GetRasterBand(3).ReadAsArray()\
+                        .astype(np.float32)
+                    nir_band = naip.GetRasterBand(4).ReadAsArray()\
+                        .astype(np.float32)
                     snap = naip
 
                     # Perform Calculation
@@ -79,7 +85,7 @@ def ARVI(naip_dir, out_dir):
     print('Finished')
 
 
-def VARI(naip_dir, out_dir):
+def VARI():
     """
     This function walks through the input NAIP directory and performs the
     VARI calculation on each naip geotiff file and saves each new VARI
@@ -89,6 +95,8 @@ def VARI(naip_dir, out_dir):
     naip_dir = Folder which contains all subfolders of naip imagery
     out_dir = Folder in which all calculated geotiff's are saved
     """
+    naip_dir = cfg.naip_path
+    out_dir = cfg.index_out_path % 'VARI'
 
     if not os.path.exists(naip_dir):
         print('NAIP directory not found')
@@ -109,9 +117,12 @@ def VARI(naip_dir, out_dir):
                 if f.endswith('.tif'):
                     # Open with gdal & create numpy arrays
                     naip = gdal.Open(os.path.join(dir, f))
-                    red_band = norm(naip.GetRasterBand(1).ReadAsArray().astype(np.float32))
-                    green_band = norm(naip.GetRasterBand(2).ReadAsArray().astype(np.float32))
-                    blue_band = norm(naip.GetRasterBand(3).ReadAsArray().astype(np.float32))
+                    red_band = norm(naip.GetRasterBand(1).ReadAsArray().
+                                    astype(np.float32))
+                    green_band = norm(naip.GetRasterBand(2).ReadAsArray().
+                                      astype(np.float32))
+                    blue_band = norm(naip.GetRasterBand(3).ReadAsArray().
+                                     astype(np.float32))
                     snap = naip
 
                     a = (green_band - red_band)
