@@ -11,8 +11,6 @@ from osgeo import gdal, ogr, osr
 import numpy as np
 import json
 import sklearn
-from math import ceil
-import geopandas as gpd
 import canopy_foss.canopy_config_foss as cfg
 
 def norm(array):
