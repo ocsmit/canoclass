@@ -10,7 +10,7 @@ import os
 from osgeo import gdal, ogr, osr
 import numpy as np
 import json
-import sklearn
+from sklearn import linear_model
 import canopy_foss.canopy_config_foss as cfg
 
 def norm(array):
@@ -159,5 +159,12 @@ def support_vector_class():
     return
 
 def linear_reg_class():
+    '''
+    This module performs linear regression analysis on naip data
+    to classify canopy
+    '''
+    
+    regr = linear_model.LinearRegression()
+    regr.fit(x_train_data, y_train_data)
 
     return
