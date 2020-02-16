@@ -150,9 +150,30 @@ def VARI():
 
     print('Finished')
 
-def prepare_training_data():
+def prepare_training_data(vector, snap_raster, out_raster):
+    # WIP
+    snap = gdal.Open(snap_raster)
+    shp = ogr.Open(vector)
+    layer = shp.GetLayer()
 
-    return
+    xy = snap.GetRasterBand(1).ReadAsArray().astype(np.float32).shape
+
+    driver = gdal.GetDriverByName('GTiff')
+    metadata = driver.GetMetadata()
+    dst_ds = driver.Create(out_raster,
+                           xsize=xy[1],
+                           ysize=xy[0],
+                           bands=1,
+                           eType=gdal.GDT_Float32)
+    proj = snap.GetProjection()
+    geo = snap.GetGeoTransform()
+    dst_ds.SetGeoTransform(geo)
+    dst_ds.SetProjection(proj)
+    gdal.RasterizeLayer(dst_ds, 1, layer, None)
+    dst_ds.FlushCache()
+    dst_ds = None
+
+    return out_raster
 
 def support_vector_class():
 
@@ -163,7 +184,7 @@ def linear_reg_class():
     This module performs linear regression analysis on naip data
     to classify canopy
     '''
-    
+
     regr = linear_model.LinearRegression()
     regr.fit(x_train_data, y_train_data)
 
