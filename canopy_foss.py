@@ -11,7 +11,7 @@ from osgeo import gdal, ogr, osr
 import numpy as np
 import json
 from sklearn import linear_model
-import canopy_foss.canopy_config_foss as cfg
+import canopy_config_foss as cfg
 
 def norm(array):
     array_min, array_max = array.min(), array.max()
@@ -150,8 +150,10 @@ def VARI():
 
     print('Finished')
 
-def prepare_training_data(vector, snap_raster, out_raster):
+def prepare_training_data(vector, out_raster):
     # WIP
+    snap_raster = cfg.snaprast_path
+
     snap = gdal.Open(snap_raster)
     shp = ogr.Open(vector)
     layer = shp.GetLayer()
