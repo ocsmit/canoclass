@@ -172,10 +172,10 @@ def prepare_training_data(vector, out_raster):
                            xsize=xy[1],
                            ysize=xy[0],
                            bands=1,
-                           eType=gdal.GDT_Int16)
+                           eType=gdal.GDT_Byte)
     proj = snap.GetProjection()
     geo = snap.GetGeoTransform()
-    dst_ds.SetGeoTransform(geo) 
+    dst_ds.SetGeoTransform(geo)
     dst_ds.SetProjection(proj)
     gdal.RasterizeLayer(dst_ds, [1], layer, None)
     dst_ds.FlushCache()
