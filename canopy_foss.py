@@ -1,21 +1,23 @@
-################################################################################
+# ------------------------------------------------------------------------------
 # Name:    canopy_foss.py
 # Purpose: This module is designed to enable open source based canopy
 #          classification utilizing USDA NAIP imagery
 # Authors: Owen Smith, IESA, University of North Georgia
 # Since:   January, 1st, 2020
-################################################################################
+# ------------------------------------------------------------------------------
 
 import os
 from osgeo import gdal, ogr, osr
 import numpy as np
 import json
 from sklearn import linear_model
-import canopy_config_foss as cfg
+import canopy_foss.canopy_config_foss as cfg
+
 
 def norm(array):
     array_min, array_max = array.min(), array.max()
     return ((1 - 0) * ((array - array_min) / (array_max - array_min))) + 1
+
 
 def ARVI():
     """
@@ -50,11 +52,11 @@ def ARVI():
                 if f.endswith('.tif'):
                     # Open with gdal & create numpy arrays
                     naip = gdal.Open(os.path.join(dir, f))
-                    red_band = naip.GetRasterBand(1).ReadAsArray()\
+                    red_band = naip.GetRasterBand(1).ReadAsArray() \
                         .astype(np.float32)
-                    blue_band = naip.GetRasterBand(3).ReadAsArray()\
+                    blue_band = naip.GetRasterBand(3).ReadAsArray() \
                         .astype(np.float32)
-                    nir_band = naip.GetRasterBand(4).ReadAsArray()\
+                    nir_band = naip.GetRasterBand(4).ReadAsArray() \
                         .astype(np.float32)
                     snap = naip
 
@@ -83,6 +85,7 @@ def ARVI():
                     print(name)
 
     print('Finished')
+
 
 def VARI():
     """
@@ -150,6 +153,7 @@ def VARI():
 
     print('Finished')
 
+
 def prepare_training_data(vector, out_raster):
     # WIP
     snap_raster = cfg.snaprast_path
@@ -157,6 +161,8 @@ def prepare_training_data(vector, out_raster):
     snap = gdal.Open(snap_raster)
     shp = ogr.Open(vector)
     layer = shp.GetLayer()
+
+
 
     xy = snap.GetRasterBand(1).ReadAsArray().astype(np.float32).shape
 
@@ -166,20 +172,21 @@ def prepare_training_data(vector, out_raster):
                            xsize=xy[1],
                            ysize=xy[0],
                            bands=1,
-                           eType=gdal.GDT_Float32)
+                           eType=gdal.GDT_Int16)
     proj = snap.GetProjection()
     geo = snap.GetGeoTransform()
-    dst_ds.SetGeoTransform(geo)
+    dst_ds.SetGeoTransform(geo) 
     dst_ds.SetProjection(proj)
-    gdal.RasterizeLayer(dst_ds, 1, layer, None)
+    gdal.RasterizeLayer(dst_ds, [1], layer, None)
     dst_ds.FlushCache()
     dst_ds = None
 
     return out_raster
 
-def support_vector_class():
 
+def support_vector_class():
     return
+
 
 def linear_reg_class():
     '''
