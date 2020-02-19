@@ -37,7 +37,8 @@ process_area_fishnet = '%s/fishnet.shp' % analysis_path
 
 process_area_naipqq = '%s/process_area_naipqq.shp' % analysis_path
 
-snaprast_path = '%s/rm_3408504_nw_16_1_20090824.tif' % data_path
+snaprast_path = \
+    'F:/canopy_dev/2009 Analysis/ARVI/arvi_m_3008101_ne_17_1_20090928.tif'
 
 # This folder will contain all result files.
 results_path = '%s/Results' % analysis_path
