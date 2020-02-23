@@ -1,16 +1,12 @@
-project_path = 'F:/canopy_dev/'
-
-
+project_path = '/run/media/owen/Research/canopy_dev'
 
 data_path = '%s/Data' % project_path
 
 phyregs_layer = '%s/Physiographic_Districts_GA.shp' % data_path
 
-
 naipqq_layer = '%s/naip_ga_2009_1m_m4b.shp' % data_path
 
 naipqq_phyregs_field = 'phyregs'
-
 
 naip_path = '%s/NAIP 2009/ga' % project_path
 
@@ -28,7 +24,6 @@ analysis_path_format = '%s/%%d Analysis' % project_path
 
 analysis_year = 2009
 
-
 analysis_path = analysis_path_format % analysis_year
 
 process_area_degree_size = 30
@@ -38,7 +33,7 @@ process_area_fishnet = '%s/fishnet.shp' % analysis_path
 process_area_naipqq = '%s/process_area_naipqq.shp' % analysis_path
 
 snaprast_path = \
-    'F:/canopy_dev/2009 Analysis/ARVI/arvi_m_3008101_ne_17_1_20090928.tif'
+    '%s/2009 Analysis/ARVI/arvi_m_3008101_ne_17_1_20090928.tif' % project_path
 
 # This folder will contain all result files.
 results_path = '%s/Results' % analysis_path
