@@ -7,9 +7,8 @@
 # ------------------------------------------------------------------------------
 
 import os
-from osgeo import gdal, ogr, osr
+from osgeo import gdal, ogr
 import numpy as np
-import json
 from sklearn import linear_model
 import canopy_foss.canopy_config_foss as cfg
 
