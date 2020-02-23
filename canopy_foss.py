@@ -186,16 +186,23 @@ def prepare_training_data(vector, out_raster, field='id'):
     return out_raster
 
 
-def support_vector_class(training_raster, naip):
+def random_forests_class(training, naip):
+    # Random forests contains n_jobs, making it ideal
 
-    x_raster = gdal.Open(training_raster)
-    X = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
+    from sklearn.ensemble import RandomForestClassifier
 
-
+    x_raster = gdal.Open(training)
+    t = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
     y_raster = gdal.Open(naip)
-    y = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
+    n = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
+    y = t[t > 0]
+    X = n.reshape(-1, 1)
 
-    return
+    clf = RandomForestClassifier(n_jobs=-1)
+
+    ras = clf.fit(X, y)
+
+    # Process finished with exit code 137 (interrupted by signal 9: SIGKILL)
 
 
 def linear_reg(training_raster, naip):
