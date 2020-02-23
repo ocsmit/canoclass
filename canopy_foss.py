@@ -154,15 +154,13 @@ def VARI():
     print('Finished')
 
 
-def prepare_training_data(vector, out_raster):
+def prepare_training_data(vector, out_raster, field='id'):
     # WIP
     snap_raster = cfg.snaprast_path
 
     snap = gdal.Open(snap_raster)
     shp = ogr.Open(vector)
     layer = shp.GetLayer()
-
-
 
     xy = snap.GetRasterBand(1).ReadAsArray().astype(np.float32).shape
 
@@ -177,24 +175,41 @@ def prepare_training_data(vector, out_raster):
     geo = snap.GetGeoTransform()
     dst_ds.SetGeoTransform(geo)
     dst_ds.SetProjection(proj)
-    gdal.RasterizeLayer(dst_ds, [1], layer, None)
+    if field is None:
+        gdal.RasterizeLayer(dst_ds, [1], layer, None)
+    else:
+        OPTIONS = ['ATTRIBUTE=' + field]
+        gdal.RasterizeLayer(dst_ds, [1], layer, None, options=OPTIONS)
     dst_ds.FlushCache()
     dst_ds = None
 
     return out_raster
 
 
-def support_vector_class():
+def support_vector_class(training_raster, naip):
+
+    x_raster = gdal.Open(training_raster)
+    X = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
+
+
+    y_raster = gdal.Open(naip)
+    y = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
+
     return
 
 
-def linear_reg_class():
+def linear_reg(training_raster, naip):
     '''
     This module performs linear regression analysis on naip data
     to classify canopy
     '''
 
-    regr = linear_model.LinearRegression()
-    regr.fit(x_train_data, y_train_data)
+    x_raster = gdal.Open(training_raster)
+    X = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
 
-    return
+    y_raster = gdal.Open(naip)
+    y = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
+
+    reg = linear_model.LinearRegression(n_jobs=-1).fit(X=X, y=y)
+
+    return reg
