@@ -182,10 +182,11 @@ def prepare_training_data(vector, out_raster, field='id'):
     dst_ds.FlushCache()
     dst_ds = None
 
+    print('Vector to raster complete.')
     return out_raster
 
 
-def random_forests_class(training, naip):
+def random_forests_class(training, naip, out_tiff):
     # Random forests contains n_jobs, making it ideal
 
     from sklearn.ensemble import RandomForestClassifier
@@ -195,13 +196,36 @@ def random_forests_class(training, naip):
     y_raster = gdal.Open(naip)
     n = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
     y = t[t > 0]
-    X = n.reshape(-1, 1)
+    X = n[t > 0]
+    X = X.reshape(-1, 1)
 
     clf = RandomForestClassifier(n_jobs=-1)
-
     ras = clf.fit(X, y)
 
-    # Process finished with exit code 137 (interrupted by signal 9: SIGKILL)
+    shape = (n.shape[0] * n.shape[1], 1)
+    array = n.reshape(shape)
+    ras_pre = ras.predict(array)
+    ras_final = ras_pre.reshape(n.shape)
+
+    driver = gdal.GetDriverByName('GTiff')
+    metadata = driver.GetMetadata()
+    shape = n.shape
+    dst_ds = driver.Create(out_tiff,
+                           xsize=shape[1],
+                           ysize=shape[0],
+                           bands=1,
+                           eType=gdal.GDT_Byte)
+    proj = x_raster.GetProjection()
+    geo = x_raster.GetGeoTransform()
+    dst_ds.SetGeoTransform(geo)
+    dst_ds.SetProjection(proj)
+    dst_ds.GetRasterBand(1).WriteArray(ras_final)
+    dst_ds.FlushCache()
+    dst_ds = None
+
+    print('Classified raster complete.')
+
+
 
 
 def linear_reg(training_raster, naip):
