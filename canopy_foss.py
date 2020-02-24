@@ -10,10 +10,20 @@ import os
 from osgeo import gdal, ogr
 import numpy as np
 from sklearn import linear_model
-import canopy_foss.canopy_config_foss as cfg
+# import canopy_foss.canopy_config_foss as cfg
 
+#===============================================================================
+# Preprocessing Functions:
+# ------------------------
+#       Index Calculations:
+#       -- ARVI(naip_dir, out_dir)
+#       -- VARI(naip_dir, out_dir)
+#
+#       Training Data Prep:
+#       -- prepare_training_data(vector, ref_raster, out_raster, field='id')
+#===============================================================================
 
-def ARVI():
+def ARVI(naip_dir, out_dir):
     """
     This function walks through the input NAIP directory and performs the
     ARVI calculation on each naip geotiff file and saves each new ARVI
@@ -23,8 +33,8 @@ def ARVI():
         naip_dir: Folder which contains all subfolders of naip imagery
         out_dir:  Folder in which all calculated geotiff's are saved
     """
-    naip_dir = cfg.naip_path
-    out_dir = cfg.index_out_path % 'ARVI'
+    # naip_dir = cfg.naip_path
+    # out_dir = cfg.index_out_path % 'ARVI'
 
     if not os.path.exists(naip_dir):
         print('NAIP directory not found')
@@ -39,7 +49,7 @@ def ARVI():
 
     for dir, subdir, files in os.walk(naip_dir):
         for f in files:
-            name = 'arvi_' + str(f)
+            name = 'arvi_%s' % f
             if os.path.exists(os.path.join(out_dir, name)):
                 continue
             if not os.path.exists(os.path.join(out_dir, name)):
@@ -81,7 +91,7 @@ def ARVI():
     print('Finished')
 
 
-def VARI():
+def VARI(naip_dir, out_dir):
     """
     This function walks through the input NAIP directory and performs the
     VARI calculation on each naip geotiff file and saves each new VARI
@@ -91,8 +101,8 @@ def VARI():
         naip_dir: Folder which contains all subfolders of naip imagery
         out_dir: Folder in which all calculated geotiff's are saved
     """
-    naip_dir = cfg.naip_path
-    out_dir = cfg.index_out_path % 'VARI'
+    # naip_dir = cfg.naip_path
+    # out_dir = cfg.index_out_path % 'VARI'
 
     if not os.path.exists(naip_dir):
         print('NAIP directory not found')
@@ -110,7 +120,7 @@ def VARI():
 
     for dir, subdir, files in os.walk(naip_dir):
         for f in files:
-            name = 'vari_' + str(f)
+            name = 'vari_%s' % f
             if os.path.exists(os.path.join(out_dir, name)):
                 continue
             if not os.path.exists(os.path.join(out_dir, name)):
@@ -129,7 +139,6 @@ def VARI():
                     b = (green_band + red_band - blue_band)
                     # Perform Calculation
                     vari = a / b
-                    name = 'vari_' + str(f)
 
                     # Save Raster
                     driver = gdal.GetDriverByName('GTiff')
@@ -152,11 +161,19 @@ def VARI():
     print('Finished')
 
 
-def prepare_training_data(vector, out_raster, field='id'):
-    # WIP
-    snap_raster = cfg.snaprast_path
+def prepare_training_data(vector, ref_raster, out_raster, field='id'):
+    """
+    This function converts the training data shapefile into a raster to allow
+    the training data to be applied for classification
+    ---
+    Args:
+        vector:
+        ref_raster:
+        out_raster:
+        field:
+    """
 
-    snap = gdal.Open(snap_raster)
+    snap = gdal.Open(ref_raster)
     shp = ogr.Open(vector)
     layer = shp.GetLayer()
 
@@ -183,6 +200,14 @@ def prepare_training_data(vector, out_raster, field='id'):
 
     print('Vector to raster complete.')
     return out_raster
+
+#===============================================================================
+# Classification Functions:
+# -------------------------
+#       Random Forests:
+#       -- random_forests_class(training_raster, in_raster, out_tiff)
+#
+#===============================================================================
 
 
 def random_forests_class(training_raster, in_raster, out_tiff):
