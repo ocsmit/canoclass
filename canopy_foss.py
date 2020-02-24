@@ -188,6 +188,12 @@ def prepare_training_data(vector, out_raster, field='id'):
 
 def random_forests_class(training, naip, out_tiff):
     # Random forests contains n_jobs, making it ideal
+    # Single tile times:
+    # ARVI w/ 25 estimators ~ 1.9 minutes
+    # ARVI w/ 100 estimators ~ 5.3 minutes
+    # ARVI w/ 500 estimators ~ 29.2 minutes - not viable
+    # VARI w/ 25 estimators ~ 2.9 minutes
+    # VARI w/ 100 estimators ~ 10 minutes
 
     from sklearn.ensemble import RandomForestClassifier
 
@@ -199,7 +205,7 @@ def random_forests_class(training, naip, out_tiff):
     X = n[t > 0]
     X = X.reshape(-1, 1)
 
-    clf = RandomForestClassifier(n_jobs=-1)
+    clf = RandomForestClassifier(n_estimators=25, n_jobs=-1)
     ras = clf.fit(X, y)
 
     shape = (n.shape[0] * n.shape[1], 1)
@@ -224,8 +230,6 @@ def random_forests_class(training, naip, out_tiff):
     dst_ds = None
 
     print('Classified raster complete.')
-
-
 
 
 def linear_reg(training_raster, naip):
