@@ -24,9 +24,9 @@ def ARVI():
     ARVI calculation on each naip geotiff file and saves each new ARVI
     geotiff in the output directory with the prefix 'arvi_'
     ---
-    Parameters:
-    naip_dir = Folder which contains all subfolders of naip imagery
-    out_dir = Folder in which all calculated geotiff's are saved
+    Args:
+        naip_dir: Folder which contains all subfolders of naip imagery
+        out_dir:  Folder in which all calculated geotiff's are saved
     """
     naip_dir = cfg.naip_path
     out_dir = cfg.index_out_path % 'ARVI'
@@ -92,9 +92,9 @@ def VARI():
     VARI calculation on each naip geotiff file and saves each new VARI
     geotiff in the output directory with the prefix 'arvi_'
     ---
-    Parameters:
-    naip_dir = Folder which contains all subfolders of naip imagery
-    out_dir = Folder in which all calculated geotiff's are saved
+    Args:
+        naip_dir: Folder which contains all subfolders of naip imagery
+        out_dir: Folder in which all calculated geotiff's are saved
     """
     naip_dir = cfg.naip_path
     out_dir = cfg.index_out_path % 'VARI'
@@ -186,20 +186,22 @@ def prepare_training_data(vector, out_raster, field='id'):
     return out_raster
 
 
-def random_forests_class(training, naip, out_tiff):
-    # Random forests contains n_jobs, making it ideal
-    # Single tile times:
-    # ARVI w/ 25 estimators ~ 1.9 minutes
-    # ARVI w/ 100 estimators ~ 5.3 minutes
-    # ARVI w/ 500 estimators ~ 29.2 minutes - not viable
-    # VARI w/ 25 estimators ~ 2.9 minutes
-    # VARI w/ 100 estimators ~ 10 minutes
+def random_forests_class(training_raster, in_raster, out_tiff):
+    """
+
+    ---
+    Args:
+        training_raster: Rasterized training data
+        in_raster: Raster training raster will be applied to 
+        out_tiff: Final output classified raster
+    """
+    #TODO: Refactor
 
     from sklearn.ensemble import RandomForestClassifier
 
-    x_raster = gdal.Open(training)
+    x_raster = gdal.Open(training_raster)
     t = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
-    y_raster = gdal.Open(naip)
+    y_raster = gdal.Open(in_raster)
     n = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
     y = t[t > 0]
     X = n[t > 0]
@@ -233,10 +235,10 @@ def random_forests_class(training, naip, out_tiff):
 
 
 def linear_reg(training_raster, naip):
-    '''
+    """
     This module performs linear regression analysis on naip data
     to classify canopy
-    '''
+    """
 
     x_raster = gdal.Open(training_raster)
     X = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
