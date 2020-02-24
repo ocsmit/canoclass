@@ -13,11 +13,6 @@ from sklearn import linear_model
 import canopy_foss.canopy_config_foss as cfg
 
 
-def norm(array):
-    array_min, array_max = array.min(), array.max()
-    return ((1 - 0) * ((array - array_min) / (array_max - array_min))) + 1
-
-
 def ARVI():
     """
     This function walks through the input NAIP directory and performs the
@@ -108,6 +103,10 @@ def VARI():
     gdal.UseExceptions()
     gdal.AllRegister()
     np.seterr(divide='ignore', invalid='ignore')
+
+    def norm(array):
+        array_min, array_max = array.min(), array.max()
+        return ((1 - 0) * ((array - array_min) / (array_max - array_min))) + 1
 
     for dir, subdir, files in os.walk(naip_dir):
         for f in files:
