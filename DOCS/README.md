@@ -1,6 +1,9 @@
 # canopy_foss
 
-Open source canopy and deforestation monitoring.
+A work in progress open source canopy and deforestation monitoring. Parallel
+research to the [CanoPy](https://github.com/HuidaeCho/canopy) module created
+for the Georgia Canopy Analysis 2009 project sponsored by the Georgia Forestry
+Commission
 
 ## Overview
 
@@ -33,7 +36,11 @@ All index functions are stored in `canopy_foss.indicies.py`
 
 **Random Forests**
 
-Contains n_jobs parameter allowing for parallel processign across the CPU
+The random forests classification function streamlines the process of
+converting NAIP imagery and it's respective training data to be used with
+scikit-learn's random forest classifier.  
+
+Contains n_jobs parameter allowing for parallel processing across the CPU
  making it ideal due to faster times.
 
 Single tile times:
