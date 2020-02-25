@@ -10,9 +10,11 @@ import os
 from osgeo import gdal, ogr
 import numpy as np
 from sklearn import linear_model
+
+
 # import canopy_foss.canopy_config_foss as cfg
 
-#===============================================================================
+# ===============================================================================
 # Preprocessing Functions:
 # ------------------------
 #       Index Calculations:
@@ -21,7 +23,7 @@ from sklearn import linear_model
 #
 #       Training Data Prep:
 #       -- prepare_training_data(vector, ref_raster, out_raster, field='id')
-#===============================================================================
+# ===============================================================================
 
 def ARVI(naip_dir, out_dir):
     """
@@ -172,6 +174,7 @@ def prepare_training_data(vector, ref_raster, out_raster, field='id'):
         out_raster:
         field:
     """
+    # TODO: Allow for training data to have 0 and 1 as values
 
     snap = gdal.Open(ref_raster)
     shp = ogr.Open(vector)
@@ -201,25 +204,26 @@ def prepare_training_data(vector, ref_raster, out_raster, field='id'):
     print('Vector to raster complete.')
     return out_raster
 
-#===============================================================================
+
+# ===============================================================================
 # Classification Functions:
 # -------------------------
 #       Random Forests:
 #       -- random_forests_class(training_raster, in_raster, out_tiff)
-#
-#===============================================================================
+# ===============================================================================
 
 
 def random_forests_class(training_raster, in_raster, out_tiff):
     """
-
+    This function enables classification of NAIP imagery using a sklearn Random
+    Forests supervised classification algorithm.
     ---
     Args:
         training_raster: Rasterized training data
         in_raster: Raster training raster will be applied to 
         out_tiff: Final output classified raster
     """
-    #TODO: Refactor
+    # TODO: Refactor
 
     from sklearn.ensemble import RandomForestClassifier
 
