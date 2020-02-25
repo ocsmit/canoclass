@@ -20,6 +20,7 @@ from sklearn import linear_model
 #       Index Calculations:
 #       -- ARVI(naip_dir, out_dir)
 #       -- VARI(naip_dir, out_dir)
+#       -- GRVI(naip_dir, out_dir)
 #
 #       Training Data Prep:
 #       -- prepare_training_data(vector, ref_raster, out_raster, field='id')
@@ -156,6 +157,68 @@ def VARI(naip_dir, out_dir):
                     dst_ds.SetGeoTransform(geo)
                     dst_ds.SetProjection(proj)
                     dst_ds.GetRasterBand(1).WriteArray(vari)
+                    dst_ds.FlushCache()
+                    dst_ds = None
+                    print(name)
+
+    print('Finished')
+
+
+def GRVI(naip_dir, out_dir):
+    """
+    This function walks through the input NAIP directory and performs the
+    GRVI calculation on each naip geotiff file and saves each new GRVI
+    geotiff in the output directory with the prefix 'grvi_'
+    ---
+    Args:
+        naip_dir: Folder which contains all subfolders of naip imagery
+        out_dir: Folder in which all calculated geotiff's are saved
+    """
+
+    if not os.path.exists(naip_dir):
+        print('NAIP directory not found')
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+
+    gdal.PushErrorHandler('CPLQuietErrorHandler')
+    gdal.UseExceptions()
+    gdal.AllRegister()
+    np.seterr(divide='ignore', invalid='ignore')
+
+    for dir, subdir, files in os.walk(naip_dir):
+        for f in files:
+            name = 'grvi_%s' % f
+            if os.path.exists(os.path.join(out_dir, name)):
+                continue
+            if not os.path.exists(os.path.join(out_dir, name)):
+                if f.endswith('.tif'):
+                    # Open with gdal & create numpy arrays
+                    naip = gdal.Open(os.path.join(dir, f))
+                    red_band = naip.GetRasterBand(1).ReadAsArray(). \
+                        astype(np.float32)
+                    green_band = naip.GetRasterBand(2).ReadAsArray(). \
+                        astype(np.float32)
+                    snap = naip
+
+                    a = (green_band - red_band)
+                    b = (green_band + red_band)
+                    # Perform Calculation
+                    grvi = a / b
+
+                    # Save Raster
+                    driver = gdal.GetDriverByName('GTiff')
+                    metadata = driver.GetMetadata()
+                    shape = grvi.shape
+                    dst_ds = driver.Create(os.path.join(out_dir, name),
+                                           xsize=shape[1],
+                                           ysize=shape[0],
+                                           bands=1,
+                                           eType=gdal.GDT_Float32)
+                    proj = snap.GetProjection()
+                    geo = snap.GetGeoTransform()
+                    dst_ds.SetGeoTransform(geo)
+                    dst_ds.SetProjection(proj)
+                    dst_ds.GetRasterBand(1).WriteArray(grvi)
                     dst_ds.FlushCache()
                     dst_ds = None
                     print(name)
