@@ -94,7 +94,7 @@ def ARVI(naip_dir, out_dir):
     print('Finished')
 
 
-def VARI(naip_dir, out_dir):
+def nVARI(naip_dir, out_dir):
     """
     This function walks through the input NAIP directory and performs the
     VARI calculation on each naip geotiff file and saves each new VARI
@@ -276,12 +276,14 @@ def prepare_training_data(vector, ref_raster, out_raster, field='id'):
 # ===============================================================================
 
 
-def random_forests_class(training_raster, in_raster, out_tiff):
+def random_forests_class(training_raster, training_fit_raster, in_raster,
+                         out_tiff):
     """
     This function enables classification of NAIP imagery using a sklearn Random
     Forests supervised classification algorithm.
     ---
     Args:
+        training_fit_raster:
         training_raster: Rasterized training data
         in_raster: Raster training raster will be applied to 
         out_tiff: Final output classified raster
@@ -292,7 +294,7 @@ def random_forests_class(training_raster, in_raster, out_tiff):
 
     x_raster = gdal.Open(training_raster)
     t = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
-    y_raster = gdal.Open(in_raster)
+    y_raster = gdal.Open(training_fit_raster)
     n = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
     y = t[t > 0]
     X = n[t > 0]
@@ -302,23 +304,27 @@ def random_forests_class(training_raster, in_raster, out_tiff):
     ras = clf.fit(X, y)
 
     shape = (n.shape[0] * n.shape[1], 1)
+    r = gdal.Open(in_raster)
+    class_raster = r.GetRasterBand(1).ReadAsArray().astype(np.float32)
+    class_array = class_raster.reshape(-1, 1)
     array = n.reshape(shape)
-    ras_pre = ras.predict(array)
-    ras_final = ras_pre.reshape(n.shape)
+    ras_pre = ras.predict(class_array)
+    ras_final = ras_pre.reshape(class_raster.shape)
+    ras_byte = ras_final.astype(dtype=np.byte)
 
     driver = gdal.GetDriverByName('GTiff')
     metadata = driver.GetMetadata()
-    shape = n.shape
+    shape = class_raster.shape
     dst_ds = driver.Create(out_tiff,
                            xsize=shape[1],
                            ysize=shape[0],
                            bands=1,
                            eType=gdal.GDT_Byte)
-    proj = x_raster.GetProjection()
-    geo = x_raster.GetGeoTransform()
+    proj = r.GetProjection()
+    geo = r.GetGeoTransform()
     dst_ds.SetGeoTransform(geo)
     dst_ds.SetProjection(proj)
-    dst_ds.GetRasterBand(1).WriteArray(ras_final)
+    dst_ds.GetRasterBand(1).WriteArray(ras_byte)
     dst_ds.FlushCache()
     dst_ds = None
 
