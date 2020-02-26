@@ -53,3 +53,5 @@ Single tile times:
 - ARVI w/ 500 estimators ~ 29.2 minutes - not viable
 - VARI w/ 25 estimators ~ 2.9 minutes
 - VARI w/ 100 estimators ~ 10 minutes
+
+TODO: KNearestNeighbors
