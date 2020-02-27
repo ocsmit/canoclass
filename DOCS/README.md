@@ -70,5 +70,7 @@ Single tile times:
 - GRVI w/ 25 estimators - deemed not viable compared to nVARI
 
 TODO: KNearestNeighbors if lit. review deems it to be comparative. 
+
 TODO: Create RF threshold for time & accuracy
+
 TODO: Solve nVARI classification noise / water body inaccuracy
