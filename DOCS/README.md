@@ -20,6 +20,11 @@ process our data and no true method to tweak it to suit our needs.
 
 All index functions are stored in `canopy_foss.indicies.py`
 
+The main focus will be on utilizing RGB index calculations as opposed to
+the standard nir band vegetation calculations that are standard. This is due
+to the wider availabilty of 3 band NAIP imagery as most 4 band (RGB + NIR
+) NAIP imagery is not accessable without paying. 
+
 **ARVI:** 
 
 * SSD computation time: 1.45 seconds per calculation or approx. 1:35 hours 
@@ -27,7 +32,7 @@ All index functions are stored in `canopy_foss.indicies.py`
 
 * HDD computation time: 6.16 hours hours to process all 3,913 ga naip tiles
 
-**VARI:** 
+**nVARI:** 
 
 * HDD computation time: 5:45 hours to process all 3,913 ga naip tiles
 
@@ -46,12 +51,17 @@ scikit-learn's random forest classifier.
 
 Contains n_jobs parameter allowing for parallel processing across the CPU
  making it ideal due to faster times.
+ 
+Thresholds for the number of estimators in addition to computational time
+thresholds will be created. 
 
 Single tile times:
 - ARVI w/ 25 estimators ~ 1.9 minutes
 - ARVI w/ 100 estimators ~ 5.3 minutes
 - ARVI w/ 500 estimators ~ 29.2 minutes - not viable
-- VARI w/ 25 estimators ~ 2.9 minutes
-- VARI w/ 100 estimators ~ 10 minutes
+- nVARI w/ 25 estimators ~ 2.9 minutes
+- nVARI w/ 100 estimators ~ 10 minutes
 
-TODO: KNearestNeighbors
+- GRVI w/ 25 estimators - deemed not viable compared to VARI
+
+TODO: KNearestNeighbors if lit review deems it to be comparative. 
