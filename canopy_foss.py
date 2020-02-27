@@ -14,7 +14,7 @@ from sklearn import linear_model
 
 # import canopy_foss.canopy_config_foss as cfg
 
-# ===============================================================================
+# ==============================================================================
 # Preprocessing Functions:
 # ------------------------
 #       Index Calculations:
@@ -24,7 +24,7 @@ from sklearn import linear_model
 #
 #       Training Data Prep:
 #       -- prepare_training_data(vector, ref_raster, out_raster, field='id')
-# ===============================================================================
+# ==============================================================================
 
 def ARVI(naip_dir, out_dir):
     """
@@ -268,12 +268,12 @@ def prepare_training_data(vector, ref_raster, out_raster, field='id'):
     return out_raster
 
 
-# ===============================================================================
+# ==============================================================================
 # Classification Functions:
 # -------------------------
 #       Random Forests:
 #       -- random_forests_class(training_raster, in_raster, out_tiff)
-# ===============================================================================
+# ==============================================================================
 
 
 def random_forests_class(training_raster, training_fit_raster, in_raster,
