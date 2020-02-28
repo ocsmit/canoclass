@@ -292,10 +292,10 @@ def random_forests_class(training_raster, training_fit_raster, in_raster,
 
     from sklearn.ensemble import RandomForestClassifier
 
-    x_raster = gdal.Open(training_raster)
-    t = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
-    y_raster = gdal.Open(training_fit_raster)
-    n = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
+    y_raster = gdal.Open(training_raster)
+    t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
+    x_raster = gdal.Open(training_fit_raster)
+    n = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
     y = t[t > 0]
     X = n[t > 0]
     X = X.reshape(-1, 1)
@@ -303,11 +303,9 @@ def random_forests_class(training_raster, training_fit_raster, in_raster,
     clf = RandomForestClassifier(n_estimators=25, n_jobs=-1)
     ras = clf.fit(X, y)
 
-    shape = (n.shape[0] * n.shape[1], 1)
     r = gdal.Open(in_raster)
     class_raster = r.GetRasterBand(1).ReadAsArray().astype(np.float32)
     class_array = class_raster.reshape(-1, 1)
-    array = n.reshape(shape)
     ras_pre = ras.predict(class_array)
     ras_final = ras_pre.reshape(class_raster.shape)
     ras_byte = ras_final.astype(dtype=np.byte)
