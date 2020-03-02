@@ -10,6 +10,7 @@ import os
 from osgeo import gdal, ogr
 import numpy as np
 from sklearn import linear_model
+from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
 
 
 # import canopy_foss.canopy_config_foss as cfg
@@ -345,7 +346,56 @@ def random_forests_class(training_raster, training_fit_raster, in_raster,
     """
     # TODO: Refactor
 
-    from sklearn.ensemble import RandomForestClassifier
+    y_raster = gdal.Open(training_raster)
+    t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
+    x_raster = gdal.Open(training_fit_raster)
+    n = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
+    y = t[t > 0]
+    X = n[t > 0]
+    X = X.reshape(-1, 1)
+
+    clf = RandomForestClassifier(n_estimators=50, n_jobs=-1,
+                                 criterion='entropy')
+    ras = clf.fit(X, y)
+
+    r = gdal.Open(in_raster)
+    class_raster = r.GetRasterBand(1).ReadAsArray().astype(np.float32)
+    class_array = class_raster.reshape(-1, 1)
+    ras_pre = ras.predict(class_array)
+    ras_final = ras_pre.reshape(class_raster.shape)
+    ras_byte = ras_final.astype(dtype=np.byte)
+
+    driver = gdal.GetDriverByName('GTiff')
+    metadata = driver.GetMetadata()
+    shape = class_raster.shape
+    dst_ds = driver.Create(out_tiff,
+                           xsize=shape[1],
+                           ysize=shape[0],
+                           bands=1,
+                           eType=gdal.GDT_Byte)
+    proj = r.GetProjection()
+    geo = r.GetGeoTransform()
+    dst_ds.SetGeoTransform(geo)
+    dst_ds.SetProjection(proj)
+    dst_ds.GetRasterBand(1).WriteArray(ras_byte)
+    dst_ds.FlushCache()
+    dst_ds = None
+
+    print('Classified raster complete.')
+
+
+def extra_random_forests_class(training_raster, training_fit_raster, in_raster,
+                               out_tiff):
+    """
+    This function enables classification of NAIP imagery using a sklearn Random
+    Forests supervised classification algorithm.
+    ---
+    Args:
+        training_fit_raster:
+        training_raster: Rasterized training data
+        in_raster: Raster training raster will be applied to
+        out_tiff: Final output classified raster
+    """
 
     y_raster = gdal.Open(training_raster)
     t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
@@ -355,7 +405,9 @@ def random_forests_class(training_raster, training_fit_raster, in_raster,
     X = n[t > 0]
     X = X.reshape(-1, 1)
 
-    clf = RandomForestClassifier(n_estimators=50, n_jobs=-1)
+    clf = ExtraTreesClassifier(n_estimators=50, n_jobs=-1,
+                               max_features='sqrt', max_depth=100,
+                               min_samples_leaf=10)
     ras = clf.fit(X, y)
 
     r = gdal.Open(in_raster)
