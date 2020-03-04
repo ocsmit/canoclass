@@ -69,8 +69,20 @@ Single tile times:
 
 - GRVI w/ 25 estimators - deemed not viable compared to nVARI
 
-TODO: KNearestNeighbors if lit. review deems it to be comparative. 
-
 TODO: Create RF threshold for time & accuracy
 
 TODO: Solve nVARI classification noise / water body inaccuracy
+
+**Extra Trees Classifier** 
+
+Extra Trees Classifier is considerably quicker/lighter than normal random
+ forests but with higher bias. 
+ 
+The parameters that seem to work best: 
+```
+ExtraTreesClassifier(n_estimators=50, n_jobs=-1,
+                     max_features='sqrt', min_samples_leaf=250,
+                     class_weight='balanced')
+```
+
+
