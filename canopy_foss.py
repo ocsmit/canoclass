@@ -355,7 +355,8 @@ def random_forests_class(training_raster, training_fit_raster, in_raster,
     X = X.reshape(-1, 1)
 
     clf = RandomForestClassifier(n_estimators=50, n_jobs=-1,
-                                 criterion='entropy')
+                               max_features='sqrt',
+                               min_samples_leaf=100)
     ras = clf.fit(X, y)
 
     r = gdal.Open(in_raster)
@@ -405,9 +406,10 @@ def extra_random_forests_class(training_raster, training_fit_raster, in_raster,
     X = n[t > 0]
     X = X.reshape(-1, 1)
 
+    # TODO: Quantify min_samples_leaf threshold
     clf = ExtraTreesClassifier(n_estimators=50, n_jobs=-1,
-                               max_features='sqrt', max_depth=100,
-                               min_samples_leaf=10)
+                               max_features='sqrt', min_samples_leaf=250,
+                               class_weight='balanced')
     ras = clf.fit(X, y)
 
     r = gdal.Open(in_raster)
