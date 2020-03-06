@@ -166,7 +166,6 @@ def nVARI(naip_dir, out_dir):
 
 
 def VDVI(naip_dir, out_dir):
-
     if not os.path.exists(naip_dir):
         print('NAIP directory not found')
     if not os.path.exists(out_dir):
@@ -293,8 +292,8 @@ def random_forests_class(training_raster, training_fit_raster, in_raster,
     X = X.reshape(-1, 1)
 
     clf = RandomForestClassifier(n_estimators=50, n_jobs=-1,
-                               max_features='sqrt',
-                               min_samples_leaf=250, class_weight='balanced')
+                                 max_features='sqrt',
+                                 min_samples_leaf=250, class_weight='balanced')
     ras = clf.fit(X, y)
 
     r = gdal.Open(in_raster)
@@ -372,8 +371,17 @@ def extra_random_forests_class(training_raster, training_fit_raster, in_raster,
     dst_ds.FlushCache()
     dst_ds = None
 
-    print('Classified raster complete.')
+    print(out_tiff)
 
+
+def batch_ext_rf(in_directory, training_raster, fit_raster, out_directory):
+    for dir, subdir, files in os.walk(in_directory):
+        for f in files:
+            input_raster = os.path.join(in_directory, f)
+            output = os.path.join(out_directory, 'c_' + f)
+            extra_random_forests_class(training_raster, fit_raster,
+                                       input_raster, output)
+    print('Complete.')
 
 def linear_reg(training_raster, naip):
     """
