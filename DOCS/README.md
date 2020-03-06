@@ -20,19 +20,17 @@ process our data and no true method to tweak it to suit our needs.
 
 All index functions are stored in `canopy_foss.indicies.py`
 
-The main focus will be on utilizing RGB index calculations as opposed to
-the standard nir band vegetation calculations that are standard. This is due
-to the wider availability of 3 band NAIP imagery as most 4 band (RGB + NIR
-) NAIP imagery is not accessible without paying. 
+Main focus changed to using NIR index calculations. RGB bands determined
+ unviable. 
 
-**ARVI: ~ NIR based index** 
+**ARVI: ~ NIR based index | Main Focus** 
 
 * SSD computation time: 1.45 seconds per calculation or approx. 1:35 hours 
   for full computation of all 3,913 ga naip tiles to NVME SSD. 
 
 * HDD computation time: 6.16 hours hours to process all 3,913 ga naip tiles
 
-**nVARI: ~ current focus** 
+**nVARI:**
 
 * HDD computation time: 5:45 hours to process all 3,913 ga naip tiles
 
@@ -40,10 +38,6 @@ to the wider availability of 3 band NAIP imagery as most 4 band (RGB + NIR
   formula [(green - red) / (green + red - blue)] ensures the values do not
   inherently fall between -1 and 1. Normalization ensures consistency for data
   across the entire NAIP data set. 
-
-**GRVI ~ currently unviable**
-
-* HDD computation time: 7.25 hours to process all 3,913 ga naip tiles
  
 ## Classification 
 
@@ -67,8 +61,6 @@ Single tile times:
 - nVARI w/ 25 estimators ~ 2.9 minutes
 - nVARI w/ 100 estimators ~ 10 minutes
 
-- GRVI w/ 25 estimators - deemed not viable compared to nVARI
-
 TODO: Create RF threshold for time & accuracy
 
 TODO: Solve nVARI classification noise / water body inaccuracy
@@ -76,13 +68,16 @@ TODO: Solve nVARI classification noise / water body inaccuracy
 **Extra Trees Classifier** 
 
 Extra Trees Classifier is considerably quicker/lighter than normal random
- forests but with higher bias. 
+ forests but with higher bias. Lighter computation load, more random. 
  
-The parameters that seem to work best: 
+Single tile times:
+- ARVI w/ 50 estimators ~ 1 minute
+ 
+Current Parameters
 ```
-ExtraTreesClassifier(n_estimators=50, n_jobs=-1,
-                     max_features='sqrt', min_samples_leaf=250,
-                     class_weight='balanced')
+    ExtraTreesClassifier(n_estimators=50, n_jobs=-1,
+                         max_features='sqrt', min_samples_leaf=10)
 ```
+
 
 
