@@ -4,6 +4,10 @@
 
 - [ ] Create ETC threshold
 
-- [ ] Add ETC computation times
+- [x] Add ETC computation time
 
-- [ ] Update proj readme for changes in focus to NIR based VI
+- [x] Update proj readme for changes in focus to NIR based VI
+
+- [ ] Create seperate batch classification function (wrapper ?)
+
+- [ ] Implement smoothing / local statistics
