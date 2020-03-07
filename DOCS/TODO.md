@@ -8,6 +8,6 @@
 
 - [x] Update proj readme for changes in focus to NIR based VI
 
-- [ ] Create seperate batch classification function (wrapper ?)
+- [x] Create seperate batch classification function (wrapper ?)
 
 - [ ] Implement smoothing / local statistics
