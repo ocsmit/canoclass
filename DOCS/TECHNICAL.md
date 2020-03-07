@@ -36,10 +36,6 @@ Single tile times:
 - nVARI w/ 25 estimators ~ 2.9 minutes
 - nVARI w/ 100 estimators ~ 10 minutes
 
-TODO: Create RF threshold for time & accuracy
-
-TODO: Solve nVARI classification noise / water body inaccuracy
-
 **Extra Trees Classifier ~ Main focus** 
 
 **Training data score = 0.8947517085091881**
