@@ -34,4 +34,4 @@ process our data and no true method to tweak it to suit our needs.
 
 **Extra Trees Classifier** 
 
-For technical information of each function see [TECHNICAL](DOCS/TECHNICAL.md)
+For technical information of each function see [TECHNICAL](TECHNICAL.md)
