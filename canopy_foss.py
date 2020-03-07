@@ -378,10 +378,21 @@ def batch_ext_rf(in_directory, training_raster, fit_raster, out_directory):
     for dir, subdir, files in os.walk(in_directory):
         for f in files:
             input_raster = os.path.join(in_directory, f)
-            output = os.path.join(out_directory, 'c_' + f)
+            output = os.path.join(out_directory, 'erf_' + f)
+            random_forests_class(training_raster, fit_raster,
+                                 input_raster, output)
+    print('Complete.')
+    
+
+def batch_rf(in_directory, training_raster, fit_raster, out_directory):
+    for dir, subdir, files in os.walk(in_directory):
+        for f in files:
+            input_raster = os.path.join(in_directory, f)
+            output = os.path.join(out_directory, 'rf_' + f)
             extra_random_forests_class(training_raster, fit_raster,
                                        input_raster, output)
     print('Complete.')
+
 
 def linear_reg(training_raster, naip):
     """
