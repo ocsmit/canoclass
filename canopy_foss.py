@@ -9,7 +9,7 @@
 import os
 from osgeo import gdal, ogr
 import numpy as np
-from sklearn import linear_model
+from scipy import ndimage
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
 
 
@@ -269,7 +269,7 @@ def prepare_training_data(vector, ref_raster, out_raster, field='id'):
 # ==============================================================================
 
 def random_forests_class(training_raster, training_fit_raster, in_raster,
-                         out_tiff):
+                         out_tiff, smoothing=True):
     """
     This function enables classification of NAIP imagery using a sklearn Random
     Forests supervised classification algorithm.
@@ -279,6 +279,7 @@ def random_forests_class(training_raster, training_fit_raster, in_raster,
         training_raster: Rasterized training data
         in_raster: Raster training raster will be applied to 
         out_tiff: Final output classified raster
+        smoothing: True :: applies median filter to output classified raster
     """
     # TODO: Refactor
 
@@ -303,27 +304,72 @@ def random_forests_class(training_raster, training_fit_raster, in_raster,
     ras_final = ras_pre.reshape(class_raster.shape)
     ras_byte = ras_final.astype(dtype=np.byte)
 
-    driver = gdal.GetDriverByName('GTiff')
-    metadata = driver.GetMetadata()
-    shape = class_raster.shape
-    dst_ds = driver.Create(out_tiff,
-                           xsize=shape[1],
-                           ysize=shape[0],
-                           bands=1,
-                           eType=gdal.GDT_Byte)
-    proj = r.GetProjection()
-    geo = r.GetGeoTransform()
-    dst_ds.SetGeoTransform(geo)
-    dst_ds.SetProjection(proj)
-    dst_ds.GetRasterBand(1).WriteArray(ras_byte)
-    dst_ds.FlushCache()
-    dst_ds = None
+    if smoothing:
+        smooth_ras = ndimage.median_filter(ras_byte, size=5)
+        driver = gdal.GetDriverByName('GTiff')
+        metadata = driver.GetMetadata()
+        shape = class_raster.shape
+        dst_ds = driver.Create(out_tiff,
+                               xsize=shape[1],
+                               ysize=shape[0],
+                               bands=1,
+                               eType=gdal.GDT_Byte)
+        proj = r.GetProjection()
+        geo = r.GetGeoTransform()
+        dst_ds.SetGeoTransform(geo)
+        dst_ds.SetProjection(proj)
+        dst_ds.GetRasterBand(1).WriteArray(smooth_ras)
+        dst_ds.FlushCache()
+        dst_ds = None
+    if not smoothing:
+        driver = gdal.GetDriverByName('GTiff')
+        metadata = driver.GetMetadata()
+        shape = class_raster.shape
+        dst_ds = driver.Create(out_tiff,
+                               xsize=shape[1],
+                               ysize=shape[0],
+                               bands=1,
+                               eType=gdal.GDT_Byte)
+        proj = r.GetProjection()
+        geo = r.GetGeoTransform()
+        dst_ds.SetGeoTransform(geo)
+        dst_ds.SetProjection(proj)
+        dst_ds.GetRasterBand(1).WriteArray(ras_byte)
+        dst_ds.FlushCache()
+        dst_ds = None
 
-    print('Classified raster complete.')
+    print(out_tiff)
+
+
+def batch_rf(in_directory, training_raster, fit_raster, out_directory,
+             smoothing=True):
+    """
+    This function enables batch classification of NAIP imagery using a
+    sklearn Ec supervised classification algorithm.
+    ---
+    Args:
+        in_directory: Input naip directory
+        training_raster: Rasterized training data
+        fit_raster: Raster training raster will be applied to
+        out_directory: output directory for classified imagery
+        smoothing: True :: applies median filter to output classified raster
+    """
+    if not os.path.exists(out_directory):
+        os.mkdir(out_directory)
+    for dir, subdir, files in os.walk(in_directory):
+        for f in files:
+            input_raster = os.path.join(in_directory, f)
+            output = os.path.join(out_directory, 'erf_' + f)
+            if os.path.exists(output):
+                continue
+            if not os.path.exists(output):
+                random_forests_class(training_raster, fit_raster,
+                                     input_raster, output, smoothing)
+    print('Complete.')
 
 
 def extra_random_forests_class(training_raster, training_fit_raster, in_raster,
-                               out_tiff):
+                               out_tiff, smoothing=True):
     """
     This function enables classification of NAIP imagery using a sklearn Random
     Forests supervised classification algorithm.
@@ -333,8 +379,8 @@ def extra_random_forests_class(training_raster, training_fit_raster, in_raster,
         training_raster: Rasterized training data
         in_raster: Raster training raster will be applied to
         out_tiff: Final output classified raster
+        smoothing: True :: applies median filter to output classified raster
     """
-
     y_raster = gdal.Open(training_raster)
     t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
     x_raster = gdal.Open(training_fit_raster)
@@ -355,41 +401,56 @@ def extra_random_forests_class(training_raster, training_fit_raster, in_raster,
     ras_final = ras_pre.reshape(class_raster.shape)
     ras_byte = ras_final.astype(dtype=np.byte)
 
-    driver = gdal.GetDriverByName('GTiff')
-    metadata = driver.GetMetadata()
-    shape = class_raster.shape
-    dst_ds = driver.Create(out_tiff,
-                           xsize=shape[1],
-                           ysize=shape[0],
-                           bands=1,
-                           eType=gdal.GDT_Byte)
-    proj = r.GetProjection()
-    geo = r.GetGeoTransform()
-    dst_ds.SetGeoTransform(geo)
-    dst_ds.SetProjection(proj)
-    dst_ds.GetRasterBand(1).WriteArray(ras_byte)
-    dst_ds.FlushCache()
-    dst_ds = None
+    if smoothing:
+        smooth_ras = ndimage.median_filter(ras_byte, size=5)
+        driver = gdal.GetDriverByName('GTiff')
+        metadata = driver.GetMetadata()
+        shape = class_raster.shape
+        dst_ds = driver.Create(out_tiff,
+                               xsize=shape[1],
+                               ysize=shape[0],
+                               bands=1,
+                               eType=gdal.GDT_Byte)
+        proj = r.GetProjection()
+        geo = r.GetGeoTransform()
+        dst_ds.SetGeoTransform(geo)
+        dst_ds.SetProjection(proj)
+        dst_ds.GetRasterBand(1).WriteArray(smooth_ras)
+        dst_ds.FlushCache()
+        dst_ds = None
+    if not smoothing:
+        driver = gdal.GetDriverByName('GTiff')
+        metadata = driver.GetMetadata()
+        shape = class_raster.shape
+        dst_ds = driver.Create(out_tiff,
+                               xsize=shape[1],
+                               ysize=shape[0],
+                               bands=1,
+                               eType=gdal.GDT_Byte)
+        proj = r.GetProjection()
+        geo = r.GetGeoTransform()
+        dst_ds.SetGeoTransform(geo)
+        dst_ds.SetProjection(proj)
+        dst_ds.GetRasterBand(1).WriteArray(ras_byte)
+        dst_ds.FlushCache()
+        dst_ds = None
 
     print(out_tiff)
 
 
-def batch_ext_rf(in_directory, training_raster, fit_raster, out_directory):
-    if not os.path.exists(out_directory):
-        os.mkdir(out_directory)
-    for dir, subdir, files in os.walk(in_directory):
-        for f in files:
-            input_raster = os.path.join(in_directory, f)
-            output = os.path.join(out_directory, 'erf_' + f)
-            if os.path.exists(output):
-                continue
-            if not os.path.exists(output):
-                random_forests_class(training_raster, fit_raster,
-                                     input_raster, output)
-    print('Complete.')
-
-
-def batch_rf(in_directory, training_raster, fit_raster, out_directory):
+def batch_ext_rf(in_directory, training_raster, fit_raster, out_directory,
+                 smoothing=True):
+    """
+    This function enables batch classification of NAIP imagery using a
+    sklearn Extra Trees supervised classification algorithm.
+    ---
+    Args:
+        in_directory: Input naip directory
+        training_raster: Rasterized training data
+        fit_raster: Raster training raster will be applied to
+        out_directory: output directory for classified imagery
+        smoothing: True :: applies median filter to output classified raster
+    """
     if not os.path.exists(out_directory):
         os.mkdir(out_directory)
     for dir, subdir, files in os.walk(in_directory):
@@ -400,22 +461,5 @@ def batch_rf(in_directory, training_raster, fit_raster, out_directory):
                 continue
             if not os.path.exists(output):
                 extra_random_forests_class(training_raster, fit_raster,
-                                           input_raster, output)
+                                           input_raster, output, smoothing)
     print('Complete.')
-
-
-def linear_reg(training_raster, naip):
-    """
-    This module performs linear regression analysis on naip data
-    to classify canopy
-    """
-
-    x_raster = gdal.Open(training_raster)
-    X = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
-
-    y_raster = gdal.Open(naip)
-    y = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
-
-    reg = linear_model.LinearRegression(n_jobs=-1).fit(X=X, y=y)
-
-    return reg
