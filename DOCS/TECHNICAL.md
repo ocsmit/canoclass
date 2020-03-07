@@ -51,3 +51,7 @@ Current Parameters
     ExtraTreesClassifier(n_estimators=50, n_jobs=-1,
                          max_features='sqrt', min_samples_leaf=10)
 ```
+
+**Smoothing** 
+
+Uses SciPy median filter to smooth output
