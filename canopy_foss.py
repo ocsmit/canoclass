@@ -375,6 +375,8 @@ def extra_random_forests_class(training_raster, training_fit_raster, in_raster,
 
 
 def batch_ext_rf(in_directory, training_raster, fit_raster, out_directory):
+    if not os.path.exists(out_directory):
+        os.mkdir(out_directory)
     for dir, subdir, files in os.walk(in_directory):
         for f in files:
             input_raster = os.path.join(in_directory, f)
@@ -388,6 +390,8 @@ def batch_ext_rf(in_directory, training_raster, fit_raster, out_directory):
 
 
 def batch_rf(in_directory, training_raster, fit_raster, out_directory):
+    if not os.path.exists(out_directory):
+        os.mkdir(out_directory)
     for dir, subdir, files in os.walk(in_directory):
         for f in files:
             input_raster = os.path.join(in_directory, f)
