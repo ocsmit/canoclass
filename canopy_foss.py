@@ -35,8 +35,6 @@ def ARVI(naip_dir, out_dir):
         naip_dir: Folder which contains all subfolders of naip imagery
         out_dir:  Folder in which all calculated geotiff's are saved
     """
-    # naip_dir = cfg.naip_path
-    # out_dir = cfg.index_out_path % 'ARVI'
 
     if not os.path.exists(naip_dir):
         print('NAIP directory not found')
@@ -103,9 +101,6 @@ def nVARI(naip_dir, out_dir):
         naip_dir: Folder which contains all subfolders of naip imagery
         out_dir: Folder in which all calculated geotiff's are saved
     """
-    # naip_dir = cfg.naip_path
-    # out_dir = cfg.index_out_path % 'VARI'
-
     if not os.path.exists(naip_dir):
         print('NAIP directory not found')
     if not os.path.exists(out_dir):
@@ -279,7 +274,6 @@ def random_forests_class(training_raster, training_fit_raster, in_raster,
         out_tiff: Final output classified raster
         smoothing: True :: applies median filter to output classified raster
     """
-    # TODO: Refactor
 
     y_raster = gdal.Open(training_raster)
     t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
