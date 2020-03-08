@@ -12,9 +12,6 @@ import numpy as np
 from scipy import ndimage
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
 
-
-# import canopy_foss.canopy_config_foss as cfg
-
 # ==============================================================================
 # Preprocessing Functions:
 # ------------------------
@@ -26,6 +23,7 @@ from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
 #       Training Data Prep:
 #       -- prepare_training_data(vector, ref_raster, out_raster, field='id')
 # ==============================================================================
+
 
 def ARVI(naip_dir, out_dir):
     """
