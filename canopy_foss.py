@@ -258,7 +258,15 @@ def prepare_training_data(vector, ref_raster, out_raster, field='id'):
 # Classification Functions:
 # -------------------------
 #       Random Forests:
-#       -- random_forests_class(training_raster, in_raster, out_tiff)
+#       -- random_forests_class(training_raster, training_fit_raster, in_raster,
+#                               out_tiff, smoothing=True)
+#       -- batch_random_forests(in_directory, training_raster, fit_raster,
+#                               out_directory, smoothing=True)
+#       Extra Trees:
+#       -- extra_trees_class(training_raster, training_fit_raster, in_raster,
+#                            out_tiff, smoothing=True):
+#       -- batch_extra_trees(in_directory, training_raster, fit_raster,
+#                            out_directory, smoothing=True):
 # ==============================================================================
 
 def random_forests_class(training_raster, training_fit_raster, in_raster,
@@ -283,10 +291,9 @@ def random_forests_class(training_raster, training_fit_raster, in_raster,
     X = n[t > 0]
     X = X.reshape(-1, 1)
 
-    clf = RandomForestClassifier(n_estimators=50, n_jobs=-1,
+    clf = RandomForestClassifier(n_estimators=50, n_jobs=2,
                                  max_features='sqrt',
-                                 min_samples_leaf=250,
-                                 class_weight='balanced', oob_score=True)
+                                 min_samples_leaf=10)
     ras = clf.fit(X, y)
 
     r = gdal.Open(in_raster)
@@ -333,8 +340,8 @@ def random_forests_class(training_raster, training_fit_raster, in_raster,
     print(out_tiff)
 
 
-def batch_rf(in_directory, training_raster, fit_raster, out_directory,
-             smoothing=True):
+def batch_random_forests(in_directory, training_raster, fit_raster,
+                         out_directory, smoothing=True):
     """
     This function enables batch classification of NAIP imagery using a
     sklearn Ec supervised classification algorithm.
@@ -360,8 +367,8 @@ def batch_rf(in_directory, training_raster, fit_raster, out_directory,
     print('Complete.')
 
 
-def extra_random_forests_class(training_raster, training_fit_raster, in_raster,
-                               out_tiff, smoothing=True):
+def extra_trees_class(training_raster, training_fit_raster, in_raster,
+                      out_tiff, smoothing=True):
     """
     This function enables classification of NAIP imagery using a sklearn Random
     Forests supervised classification algorithm.
@@ -430,8 +437,8 @@ def extra_random_forests_class(training_raster, training_fit_raster, in_raster,
     print(out_tiff)
 
 
-def batch_ext_rf(in_directory, training_raster, fit_raster, out_directory,
-                 smoothing=True):
+def batch_extra_trees(in_directory, training_raster, fit_raster, out_directory,
+                      smoothing=True):
     """
     This function enables batch classification of NAIP imagery using a
     sklearn Extra Trees supervised classification algorithm.
@@ -452,6 +459,6 @@ def batch_ext_rf(in_directory, training_raster, fit_raster, out_directory,
             if os.path.exists(output):
                 continue
             if not os.path.exists(output):
-                extra_random_forests_class(training_raster, fit_raster,
-                                           input_raster, output, smoothing)
+                extra_trees_class(training_raster, fit_raster,
+                                  input_raster, output, smoothing)
     print('Complete.')
