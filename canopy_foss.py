@@ -388,9 +388,12 @@ def extra_trees_class(training_raster, training_fit_raster, in_raster,
     X = n[t > 0]
     X = X.reshape(-1, 1)
 
+    weight = [{1: 1, 2: 2}]
     # TODO: Quantify min_samples_leaf threshold
-    clf = ExtraTreesClassifier(n_estimators=50, n_jobs=-1,
-                               max_features='sqrt', min_samples_leaf=10)
+    clf = ExtraTreesClassifier(n_estimators=100, n_jobs=-1,
+                               max_features=None,
+                               min_samples_leaf=10, class_weight={1: 2,
+                                                                  2: 0.5})
     ras = clf.fit(X, y)
 
     r = gdal.Open(in_raster)
@@ -401,7 +404,7 @@ def extra_trees_class(training_raster, training_fit_raster, in_raster,
     ras_byte = ras_final.astype(dtype=np.byte)
 
     if smoothing:
-        smooth_ras = ndimage.median_filter(ras_byte, size=5)
+        smooth_ras = ndimage.median_filter(ras_byte, size=10)
         driver = gdal.GetDriverByName('GTiff')
         metadata = driver.GetMetadata()
         shape = class_raster.shape
