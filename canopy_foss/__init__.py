@@ -1,2 +1,2 @@
-from .class_utils import *
+from .classify import *
 from .preprocessing import *
