@@ -1,6 +1,8 @@
 # ==============================================================================
 # Classification Functions:
 # -------------------------
+#       -- split_data(training_raster, training_fit_raster)
+#       -- tune_hyperparameter(training_raster, training_fit_raster)
 #       Random Forests:
 #       -- random_forests_class(training_raster, training_fit_raster, in_raster,
 #                               out_tiff, smoothing=True)
@@ -18,6 +20,53 @@ from osgeo import gdal, ogr
 import numpy as np
 from scipy import ndimage
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
+from sklearn.model_selection import RandomizedSearchCV
+from sklearn.model_selection import train_test_split
+
+def split_data(training_raster, training_fit_raster):
+
+    y_raster = gdal.Open(training_raster)
+    t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
+    x_raster = gdal.Open(training_fit_raster)
+    n = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
+    y = t[t > 0]
+    X = n[t > 0]
+    X = X.reshape(-1, 1)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size =
+    0.33)
+
+    return X_train, X_test, y_train, y_test
+
+
+# TODO: WIP
+def tune_hyperparameter(training_raster, training_fit_raster):
+
+    y_raster = gdal.Open(training_raster)
+    t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
+    x_raster = gdal.Open(training_fit_raster)
+    n = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
+    y = t[t > 0]
+    X = n[t > 0]
+    X = X.reshape(-1, 1)
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size =
+    0.33)
+
+    n_estimators = [int(x) for x in np.linspace(start=10, stop=150, num=10)]
+    min_samples_leaf = [int(x) for x in np.linspace(start=5, stop=500, num=10)]
+    random_grid = {
+        'n_estimators': n_estimators,
+        'min_samples_leaf': min_samples_leaf
+    }
+    weight = [{1: 1, 2: 2}]
+    etc = ExtraTreesClassifier(n_estimators=100, n_jobs=-1,
+                               max_features=None,
+                               min_samples_leaf=10, class_weight={1: 2, 2: 0.5})
+    clf = RandomizedSearchCV(etc, random_grid, random_state=0)
+    clf.fit(X_train, y_train)
+
+    print(clf.best_params_)
+
 
 
 def random_forests_class(training_raster, training_fit_raster, in_raster,
