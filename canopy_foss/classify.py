@@ -23,6 +23,7 @@ from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.model_selection import train_test_split
 
+
 def split_data(training_raster, training_fit_raster):
 
     y_raster = gdal.Open(training_raster)
@@ -62,11 +63,10 @@ def tune_hyperparameter(training_raster, training_fit_raster):
     etc = ExtraTreesClassifier(n_estimators=100, n_jobs=-1,
                                max_features=None,
                                min_samples_leaf=10, class_weight={1: 2, 2: 0.5})
-    clf = RandomizedSearchCV(etc, random_grid, random_state=0)
+    clf = RandomizedSearchCV(etc, random_grid, random_state=0, verbose=3)
     clf.fit(X_train, y_train)
 
     print(clf.best_params_)
-
 
 
 def random_forests_class(training_raster, training_fit_raster, in_raster,
