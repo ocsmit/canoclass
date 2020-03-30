@@ -1,5 +1,7 @@
 # **canopy_foss** 
 
+[CanoPy FOSS page](https://gislab.isnew.info/open_source_canopy_classification)
+
 A work in progress open source canopy and deforestation monitoring. Parallel
 research to the [CanoPy](https://github.com/HuidaeCho/canopy) module created
 for the Georgia Canopy Analysis 2009 project sponsored by the Georgia Forestry
