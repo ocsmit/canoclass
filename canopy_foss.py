@@ -91,16 +91,17 @@ def ARVI(phy_id):
     workspace = config.workspace
     shp = config.naipqq_shp
     naip_dir = config.naip_dir
-    out_dir = config.arvi_dir
-
-    naip_path = get_naip_path(shp, phy_id, naip_dir)
 
     if not os.path.exists(naip_dir):
         print('NAIP directory not found')
     if not os.path.exists(workspace):
         os.mkdir(workspace)
-        os.mkdir(out_dir)
 
+    region = get_phyregs_name(phy_id)
+    print(region)
+    out_dir = config.arvi_dir % region
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
     # Create list with file names
     gdal.PushErrorHandler('CPLQuietErrorHandler')
     gdal.UseExceptions()
@@ -407,8 +408,7 @@ def random_forests_class(training_raster, training_fit_raster, in_raster,
     print(out_tiff)
 
 
-def batch_random_forests(in_directory, training_raster, fit_raster,
-                         out_directory, smoothing=True):
+def batch_random_forests(out_directory, smoothing=True):
     """
     This function enables batch classification of NAIP imagery using a
     sklearn Ec supervised classification algorithm.
@@ -420,6 +420,10 @@ def batch_random_forests(in_directory, training_raster, fit_raster,
         out_directory: output directory for classified imagery
         smoothing: True :: applies median filter to output classified raster
     """
+    in_directory = config.arvi_dir
+    training_raster = config.training_raster
+    fit_raster = config.training_fit_raster
+
     y_raster = gdal.Open(training_raster)
     t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
     x_raster = gdal.Open(fit_raster)
