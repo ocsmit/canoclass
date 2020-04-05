@@ -39,7 +39,6 @@ def split_data(training_raster, training_fit_raster):
     return X_train, X_test, y_train, y_test
 
 
-# TODO: WIP
 def tune_hyperparameter(training_raster, training_fit_raster):
 
     y_raster = gdal.Open(training_raster)
