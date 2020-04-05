@@ -14,6 +14,24 @@ import os
 from osgeo import gdal, ogr
 import numpy as np
 
+
+def region_filter(shp, phy_id):
+    src = ogr.Open(shp)
+    lyr = src.GetLayer()
+    FileName = []
+    phyregs = []
+    filtered = []
+    query = ',%d,' % phy_id
+    for i in lyr:
+        FileName.append(i.GetField('FileName'))
+        phyregs.append(i.GetField('phyregs'))
+    for j in range(len(phyregs)):
+        if query in phyregs[j]:
+            filtered.append(FileName[j])
+    return filtered
+
+
+
 def ARVI(naip_dir, out_dir):
     """
     This function walks through the input NAIP directory and performs the
