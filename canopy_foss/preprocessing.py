@@ -15,7 +15,7 @@ from osgeo import gdal, ogr
 import numpy as np
 
 
-def region_filter(shp, phy_id, naip_dir):
+def get_naip_paths(shp, phy_id, naip_dir):
     src = ogr.Open(shp)
     lyr = src.GetLayer()
     FileName = []
