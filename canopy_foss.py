@@ -232,7 +232,7 @@ def nVARI(naip_dir, out_dir):
     print('Finished')
 
 
-def prepare_training_data(vector, ref_raster, out_raster, field='id'):
+def prepare_training_data(field='id'):
     """
     This function converts the training data shapefile into a raster to allow
     the training data to be applied for classification
@@ -244,6 +244,10 @@ def prepare_training_data(vector, ref_raster, out_raster, field='id'):
         field:
     """
     # TODO: Allow for training data to have 0 and 1 as values
+
+    vector = config.training_shp
+    ref_raster = config.reference_raster
+    out_raster = config.training_raster
 
     snap = gdal.Open(ref_raster)
     shp = ogr.Open(vector)
