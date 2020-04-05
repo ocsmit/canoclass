@@ -20,6 +20,17 @@ from sklearn.model_selection import RandomizedSearchCV
 from sklearn.model_selection import train_test_split
 
 
+def get_phyregs_name(phy_id):
+    shp = config.phyreg_lyr
+    src = ogr.Open(shp)
+    lyr = src.GetLayer()
+    query = "PHYSIO_ID = %d" % phy_id
+    lyr.SetAttributeFilter(query)
+    for i in lyr:
+        name = i.GetField('NAME')
+        name = name.replace(' ', '_').replace('-', '_')
+    return name
+
 
 def get_naip_path(shp, phy_id, naip_dir):
     src = ogr.Open(shp)
