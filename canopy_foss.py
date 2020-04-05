@@ -91,16 +91,19 @@ def ARVI(phy_id):
     workspace = config.workspace
     shp = config.naipqq_shp
     naip_dir = config.naip_dir
+    arvi_dir = config.results
 
     if not os.path.exists(naip_dir):
         print('NAIP directory not found')
-    if not os.path.exists(workspace):
-        os.mkdir(workspace)
 
     region = get_phyregs_name(phy_id)
     print(region)
-    out_dir = config.arvi_dir % region
+    region_dir = '%s/%s' % (arvi_dir, region)
+    out_dir = '%s/Inputs' % (region_dir)
+    if not os.path.exists(arvi_dir):
+        os.mkdir(arvi_dir)
     if not os.path.exists(out_dir):
+        os.mkdir(region_dir)
         os.mkdir(out_dir)
     # Create list with file names
     gdal.PushErrorHandler('CPLQuietErrorHandler')
@@ -163,7 +166,7 @@ def ARVI(phy_id):
             dst_ds.GetRasterBand(1).WriteArray(arvi)
             dst_ds.FlushCache()
             dst_ds = None
-            print(outputs[i])
+
 
 
 def nVARI(naip_dir, out_dir):
