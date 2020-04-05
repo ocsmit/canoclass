@@ -15,7 +15,7 @@ from osgeo import gdal, ogr
 import numpy as np
 
 
-def get_naip_paths(shp, phy_id, naip_dir):
+def get_naip_path(shp, phy_id, naip_dir):
     src = ogr.Open(shp)
     lyr = src.GetLayer()
     FileName = []
@@ -34,6 +34,29 @@ def get_naip_paths(shp, phy_id, naip_dir):
         filename = '%s.tif' % file[:-13]
         folder = file[2:7]
         path = '%s/%s/%s' % (naip_dir, folder, filename)
+        paths.append(path)
+    return paths
+
+
+def get_arvi_path(shp, phy_id, arvi_dir):
+    src = ogr.Open(shp)
+    lyr = src.GetLayer()
+    FileName = []
+    phyregs = []
+    filtered = []
+    paths = []
+    query = ',%d,' % phy_id
+    for i in lyr:
+        FileName.append(i.GetField('FileName'))
+        phyregs.append(i.GetField('phyregs'))
+    for j in range(len(phyregs)):
+        if query in phyregs[j]:
+            filtered.append(FileName[j])
+    for i in range(len(filtered)):
+        file = ('%s%s') % ('arvi_', filtered[i])
+        filename = '%s.tif' % file[:-13]
+        folder = file[2:7]
+        path = '%s/%s' % (arvi_dir, filename)
         paths.append(path)
     return paths
 
