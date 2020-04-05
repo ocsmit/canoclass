@@ -13,6 +13,7 @@
 import os
 from osgeo import gdal, ogr
 import numpy as np
+import canopy_foss.config as config
 
 
 def get_naip_path(shp, phy_id, naip_dir):
@@ -53,7 +54,7 @@ def get_arvi_path(shp, phy_id, arvi_dir):
         if query in phyregs[j]:
             filtered.append(FileName[j])
     for i in range(len(filtered)):
-        file = ('%s%s') % ('arvi_', filtered[i])
+        file = '%s%s' % ('arvi_', filtered[i])
         filename = '%s.tif' % file[:-13]
         folder = file[2:7]
         path = '%s/%s' % (arvi_dir, filename)
@@ -61,7 +62,7 @@ def get_arvi_path(shp, phy_id, arvi_dir):
     return paths
 
 
-def ARVI(naip_dir, out_dir):
+def ARVI(phy_id):
     """
     This function walks through the input NAIP directory and performs the
     ARVI calculation on each naip geotiff file and saves each new ARVI
@@ -71,10 +72,17 @@ def ARVI(naip_dir, out_dir):
         naip_dir: Folder which contains all subfolders of naip imagery
         out_dir:  Folder in which all calculated geotiff's are saved
     """
+    workspace = config.workspace
+    shp = config.naipqq_shp
+    naip_dir = config.naip_dir
+    out_dir = config.arvi_dir
+
+    naip_path = get_naip_path(shp, phy_id, naip_dir)
 
     if not os.path.exists(naip_dir):
         print('NAIP directory not found')
-    if not os.path.exists(out_dir):
+    if not os.path.exists(workspace):
+        os.mkdir(workspace)
         os.mkdir(out_dir)
 
     # Create list with file names
@@ -83,48 +91,107 @@ def ARVI(naip_dir, out_dir):
     gdal.AllRegister()
     np.seterr(divide='ignore', invalid='ignore')
 
-    for dir, subdir, files in os.walk(naip_dir):
-        for f in files:
-            name = 'arvi_%s' % f
-            if os.path.exists(os.path.join(out_dir, name)):
-                continue
-            if not os.path.exists(os.path.join(out_dir, name)):
-                if f.endswith('.tif'):
-                    # Open with gdal & create numpy arrays
-                    naip = gdal.Open(os.path.join(dir, f))
-                    red_band = naip.GetRasterBand(1).ReadAsArray() \
-                        .astype(np.float32)
-                    blue_band = naip.GetRasterBand(3).ReadAsArray() \
-                        .astype(np.float32)
-                    nir_band = naip.GetRasterBand(4).ReadAsArray() \
-                        .astype(np.float32)
-                    snap = naip
-
-                    # Perform Calculation
-                    a = (nir_band - (2 * red_band) + blue_band)
-                    b = (nir_band + (2 * red_band) + blue_band)
-                    arvi = a / b
-                    name = 'arvi_' + str(f)
-                    # Save Raster
-
-                    driver = gdal.GetDriverByName('GTiff')
-                    metadata = driver.GetMetadata()
-                    shape = arvi.shape
-                    dst_ds = driver.Create(os.path.join(out_dir, name),
-                                           xsize=shape[1],
-                                           ysize=shape[0],
-                                           bands=1,
-                                           eType=gdal.GDT_Float32)
-                    proj = snap.GetProjection()
-                    geo = snap.GetGeoTransform()
-                    dst_ds.SetGeoTransform(geo)
-                    dst_ds.SetProjection(proj)
-                    dst_ds.GetRasterBand(1).WriteArray(arvi)
-                    dst_ds.FlushCache()
-                    dst_ds = None
-                    print(name)
-
-    print('Finished')
+    src = ogr.Open(shp)
+    lyr = src.GetLayer()
+    FileName = []
+    phyregs = []
+    filtered = []
+    paths = []
+    query = ',%d,' % phy_id
+    outputs = []
+    for i in lyr:
+        FileName.append(i.GetField('FileName'))
+        phyregs.append(i.GetField('phyregs'))
+    for j in range(len(phyregs)):
+        if query in phyregs[j]:
+            filtered.append(FileName[j])
+    for i in range(len(filtered)):
+        file = filtered[i]
+        filename = '%s.tif' % file[:-13]
+        arvi_file = 'arvi_%s' % filename
+        folder = file[2:7]
+        in_path = '%s/%s/%s' % (naip_dir, folder, filename)
+        out_path = '%s/%s' % (out_dir, arvi_file)
+        outputs.append(out_path)
+        paths.append(in_path)
+        if os.path.exists(outputs[i]):
+            continue
+        if not os.path.exists(outputs[i]):
+            # Open with gdal & create numpy arrays
+            naip = gdal.Open(paths[i])
+            red_band = naip.GetRasterBand(1).ReadAsArray() \
+                .astype(np.float32)
+            blue_band = naip.GetRasterBand(3).ReadAsArray() \
+                .astype(np.float32)
+            nir_band = naip.GetRasterBand(4).ReadAsArray() \
+                .astype(np.float32)
+            snap = naip
+            # Perform Calculation
+            a = (nir_band - (2 * red_band) + blue_band)
+            b = (nir_band + (2 * red_band) + blue_band)
+            arvi = a / b
+            # Save Raster
+            driver = gdal.GetDriverByName('GTiff')
+            metadata = driver.GetMetadata()
+            shape = arvi.shape
+            dst_ds = driver.Create(outputs[i],
+                                   xsize=shape[1],
+                                   ysize=shape[0],
+                                   bands=1,
+                                   eType=gdal.GDT_Float32)
+            proj = snap.GetProjection()
+            geo = snap.GetGeoTransform()
+            dst_ds.SetGeoTransform(geo)
+            dst_ds.SetProjection(proj)
+            dst_ds.GetRasterBand(1).WriteArray(arvi)
+            dst_ds.FlushCache()
+            dst_ds = None
+            print(outputs[i])
+#
+    #
+#
+    # for dir, subdir, files in os.walk(naip_dir):
+    #     for f in files:
+    #         name = 'arvi_%s' % f
+    #         if os.path.exists(os.path.join(out_dir, name)):
+    #             continue
+    #         if not os.path.exists(os.path.join(out_dir, name)):
+    #             if f.endswith('.tif'):
+    #                 # Open with gdal & create numpy arrays
+    #                 naip = gdal.Open(os.path.join(dir, f))
+    #                 red_band = naip.GetRasterBand(1).ReadAsArray() \
+    #                     .astype(np.float32)
+    #                 blue_band = naip.GetRasterBand(3).ReadAsArray() \
+    #                     .astype(np.float32)
+    #                 nir_band = naip.GetRasterBand(4).ReadAsArray() \
+    #                     .astype(np.float32)
+    #                 snap = naip
+#
+    #                 # Perform Calculation
+    #                 a = (nir_band - (2 * red_band) + blue_band)
+    #                 b = (nir_band + (2 * red_band) + blue_band)
+    #                 arvi = a / b
+    #                 name = 'arvi_' + str(f)
+    #                 # Save Raster
+#
+    #                 driver = gdal.GetDriverByName('GTiff')
+    #                 metadata = driver.GetMetadata()
+    #                 shape = arvi.shape
+    #                 dst_ds = driver.Create(os.path.join(out_dir, name),
+    #                                        xsize=shape[1],
+    #                                        ysize=shape[0],
+    #                                        bands=1,
+    #                                        eType=gdal.GDT_Float32)
+    #                 proj = snap.GetProjection()
+    #                 geo = snap.GetGeoTransform()
+    #                 dst_ds.SetGeoTransform(geo)
+    #                 dst_ds.SetProjection(proj)
+    #                 dst_ds.GetRasterBand(1).WriteArray(arvi)
+    #                 dst_ds.FlushCache()
+    #                 dst_ds = None
+    #                 print(name)
+#
+    # print('Finished')
 
 
 def nVARI(naip_dir, out_dir):
