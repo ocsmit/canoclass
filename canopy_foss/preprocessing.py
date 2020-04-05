@@ -15,12 +15,13 @@ from osgeo import gdal, ogr
 import numpy as np
 
 
-def region_filter(shp, phy_id):
+def region_filter(shp, phy_id, naip_dir):
     src = ogr.Open(shp)
     lyr = src.GetLayer()
     FileName = []
     phyregs = []
     filtered = []
+    paths = []
     query = ',%d,' % phy_id
     for i in lyr:
         FileName.append(i.GetField('FileName'))
@@ -28,8 +29,13 @@ def region_filter(shp, phy_id):
     for j in range(len(phyregs)):
         if query in phyregs[j]:
             filtered.append(FileName[j])
-    return filtered
-
+    for i in range(len(filtered)):
+        file = filtered[i]
+        filename = '%s.tif' % file[:-13]
+        folder = file[2:7]
+        path = '%s/%s/%s' % (naip_dir, folder, filename)
+        paths.append(path)
+    return paths
 
 
 def ARVI(naip_dir, out_dir):
