@@ -1,13 +1,13 @@
-workspace = '/folder_where_all_analysis_is_to_be_saved'
+workspace = '/mnt/Research/GFC_FOSS'
 naip_dir = '/input/path/to/naip/directory'
-arvi_dir = '%s/input_path_where_ARVI_to_be_saved/%%s' % workspace
+results = '%s/Results' % workspace
 class_directory = '%s/%%s/outputs' % workspace
 
-data = 'Data folder/'
-phyreg_lyr = '%s/*.shp'
-naipqq_shp = '%s/*.shp'
-training_shp = '%/training_shp.shp'
-training_raster = '%/training_raster.tif'
-reference_raster = '%s/NAIP raster data was drawn over.tif'
-training_fit_raster = '%s/.tif'
+data = '%s/Data' % workspace
+phyreg_lyr = '%s/Physiographic_Districts_GA.shp' % data
+naipqq_shp = '%s/ga_naip15qq.shp' % data
+training_shp = '%s/training_shp.shp' % data
+training_raster = '%s/training_raster.tif' % data
+reference_raster = '%s/NAIP raster data was drawn over.tif' % data
+training_fit_raster = '%s/.tif' % data
 
