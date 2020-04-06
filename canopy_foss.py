@@ -85,23 +85,22 @@ def ARVI(phy_id):
     geotiff in the output directory with the prefix 'arvi_'
     ---
     Args:
-        naip_dir: Folder which contains all subfolders of naip imagery
-        out_dir:  Folder in which all calculated geotiff's are saved
+        phy_id: Physiographic region ID
     """
     workspace = config.workspace
     shp = config.naipqq_shp
     naip_dir = config.naip_dir
-    arvi_dir = config.results
+    results_dir = config.results
 
     if not os.path.exists(naip_dir):
         print('NAIP directory not found')
 
     region = get_phyregs_name(phy_id)
     print(region)
-    region_dir = '%s/%s' % (arvi_dir, region)
+    region_dir = '%s/%s' % (results_dir, region)
     out_dir = '%s/Inputs' % (region_dir)
-    if not os.path.exists(arvi_dir):
-        os.mkdir(arvi_dir)
+    if not os.path.exists(results_dir):
+        os.mkdir(results_dir)
     if not os.path.exists(out_dir):
         os.mkdir(region_dir)
         os.mkdir(out_dir)
@@ -137,7 +136,7 @@ def ARVI(phy_id):
         if os.path.exists(outputs[i]):
             continue
         if not os.path.exists(paths[i]):
-            print(paths[i])
+            print('Missing file: ', paths[i])
             continue
         if os.path.exists(paths[i]):
             # Open with gdal & create numpy arrays
@@ -561,19 +560,31 @@ def extra_trees_class(training_raster, training_fit_raster, in_raster,
     print(out_tiff)
 
 
-def batch_extra_trees(in_directory, training_raster, fit_raster, out_directory,
-                      smoothing=True):
+def batch_extra_trees(phy_id, smoothing=True):
     """
     This function enables batch classification of NAIP imagery using a
     sklearn Extra Trees supervised classification algorithm.
     ---
     Args:
-        in_directory: Input naip directory
-        training_raster: Rasterized training data
-        fit_raster: Raster training raster will be applied to
-        out_directory: output directory for classified imagery
-        smoothing: True :: applies median filter to output classified raster
+
     """
+
+    workspace = config.workspace
+    shp = config.naipqq_shp
+    results_dir = config.results
+    training_raster = config.training_raster
+    fit_raster = config.training_fit_raster
+
+    region = get_phyregs_name(phy_id)
+    print(region)
+    region_dir = '%s/%s' % (results_dir, region)
+    in_dir = '%s/Inputs' % (region_dir)
+    out_dir = '%s/Outputs' % (region_dir)
+    if not os.path.exists(in_dir):
+        raise IOError('Input directory does not exist.')
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+
     y_raster = gdal.Open(training_raster)
     t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
     x_raster = gdal.Open(fit_raster)
@@ -581,58 +592,73 @@ def batch_extra_trees(in_directory, training_raster, fit_raster, out_directory,
     y = t[t > 0]
     X = n[t > 0]
     X = X.reshape(-1, 1)
-    clf = ExtraTreesClassifier(n_estimators=100, n_jobs=-1,
+    clf = ExtraTreesClassifier(n_estimators=41, n_jobs=-1,
                                max_features=None,
-                               min_samples_leaf=10, class_weight={1: 2, 2: 0.5})
+                               min_samples_leaf=5, class_weight={1: 2, 2: 0.5})
     ras = clf.fit(X, y)
-    if not os.path.exists(out_directory):
-        os.mkdir(out_directory)
-    for dir, subdir, files in os.walk(in_directory):
-        for f in files:
-            input_raster = os.path.join(in_directory, f)
-            output = os.path.join(out_directory, 'rf_' + f)
-            if os.path.exists(output):
-                continue
-            if not os.path.exists(output):
-                r = gdal.Open(input_raster)
-                class_raster = r.GetRasterBand(1).ReadAsArray().astype(
-                    np.float32)
-                class_array = class_raster.reshape(-1, 1)
-                ras_pre = ras.predict(class_array)
-                ras_final = ras_pre.reshape(class_raster.shape)
-                ras_byte = ras_final.astype(dtype=np.byte)
-                if smoothing:
-                    smooth_ras = ndimage.median_filter(ras_byte, size=5)
-                    driver = gdal.GetDriverByName('GTiff')
-                    metadata = driver.GetMetadata()
-                    shape = class_raster.shape
-                    dst_ds = driver.Create(output,
-                                           xsize=shape[1],
-                                           ysize=shape[0],
-                                           bands=1,
-                                           eType=gdal.GDT_Byte)
-                    proj = r.GetProjection()
-                    geo = r.GetGeoTransform()
-                    dst_ds.SetGeoTransform(geo)
-                    dst_ds.SetProjection(proj)
-                    dst_ds.GetRasterBand(1).WriteArray(smooth_ras)
-                    dst_ds.FlushCache()
-                    dst_ds = None
-                if not smoothing:
-                    driver = gdal.GetDriverByName('GTiff')
-                    metadata = driver.GetMetadata()
-                    shape = class_raster.shape
-                    dst_ds = driver.Create(output,
-                                           xsize=shape[1],
-                                           ysize=shape[0],
-                                           bands=1,
-                                           eType=gdal.GDT_Byte)
-                    proj = r.GetProjection()
-                    geo = r.GetGeoTransform()
-                    dst_ds.SetGeoTransform(geo)
-                    dst_ds.SetProjection(proj)
-                    dst_ds.GetRasterBand(1).WriteArray(ras_byte)
-                    dst_ds.FlushCache()
-                    dst_ds = None
-                print(output)
-    print('Complete.')
+
+    src = ogr.Open(shp)
+    lyr = src.GetLayer()
+    FileName = []
+    phyregs = []
+    filtered = []
+    paths = []
+    query = ',%d,' % phy_id
+    outputs = []
+    for i in lyr:
+        FileName.append(i.GetField('FileName'))
+        phyregs.append(i.GetField('phyregs'))
+    for j in range(len(phyregs)):
+        if query in phyregs[j]:
+            filtered.append(FileName[j])
+    for i in range(len(filtered)):
+        file = '%s%s' % ('arvi_', filtered[i])
+        filename = '%s.tif' % file[:-13]
+        in_path = '%s/%s' % (in_dir, filename)
+        out_file = '%s/%s%s' % (out_dir, 'c_', filename)
+        outputs.append(out_file)
+        paths.append(in_path)
+        if not os.path.exists(paths[i]):
+            print('Missing file: ', paths[i])
+            continue
+        if os.path.exists(paths[i]):
+            r = gdal.Open(paths[i])
+            class_raster = r.GetRasterBand(1).ReadAsArray().astype(
+                np.float32)
+            class_array = class_raster.reshape(-1, 1)
+            ras_pre = ras.predict(class_array)
+            ras_final = ras_pre.reshape(class_raster.shape)
+            ras_byte = ras_final.astype(dtype=np.byte)
+            if smoothing:
+                smooth_ras = ndimage.median_filter(ras_byte, size=5)
+                driver = gdal.GetDriverByName('GTiff')
+                metadata = driver.GetMetadata()
+                shape = class_raster.shape
+                dst_ds = driver.Create(outputs[i],
+                                       xsize=shape[1],
+                                       ysize=shape[0],
+                                       bands=1,
+                                       eType=gdal.GDT_Byte)
+                proj = r.GetProjection()
+                geo = r.GetGeoTransform()
+                dst_ds.SetGeoTransform(geo)
+                dst_ds.SetProjection(proj)
+                dst_ds.GetRasterBand(1).WriteArray(smooth_ras)
+                dst_ds.FlushCache()
+                dst_ds = None
+            if not smoothing:
+                driver = gdal.GetDriverByName('GTiff')
+                metadata = driver.GetMetadata()
+                shape = class_raster.shape
+                dst_ds = driver.Create(outputs[i],
+                                       xsize=shape[1],
+                                       ysize=shape[0],
+                                       bands=1,
+                                       eType=gdal.GDT_Byte)
+                proj = r.GetProjection()
+                geo = r.GetGeoTransform()
+                dst_ds.SetGeoTransform(geo)
+                dst_ds.SetProjection(proj)
+                dst_ds.GetRasterBand(1).WriteArray(ras_byte)
+                dst_ds.FlushCache()
+                dst_ds = None
