@@ -136,7 +136,10 @@ def ARVI(phy_id):
         paths.append(in_path)
         if os.path.exists(outputs[i]):
             continue
-        if not os.path.exists(outputs[i]):
+        if not os.path.exists(paths[i]):
+            print(paths[i])
+            continue
+        if os.path.exists(paths[i]):
             # Open with gdal & create numpy arrays
             naip = gdal.Open(paths[i])
             red_band = naip.GetRasterBand(1).ReadAsArray() \
