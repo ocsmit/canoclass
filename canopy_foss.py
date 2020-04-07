@@ -94,7 +94,7 @@ def ARVI(phy_id):
 
     if not os.path.exists(naip_dir):
         print('NAIP directory not found')
-
+    # Get region name and create output file path
     region = get_phyregs_name(phy_id)
     print(region)
     region_dir = '%s/%s' % (results_dir, region)
@@ -104,12 +104,13 @@ def ARVI(phy_id):
     if not os.path.exists(out_dir):
         os.mkdir(region_dir)
         os.mkdir(out_dir)
-    # Create list with file names
     gdal.PushErrorHandler('CPLQuietErrorHandler')
     gdal.UseExceptions()
     gdal.AllRegister()
     np.seterr(divide='ignore', invalid='ignore')
 
+    # Open naip_qq shapefile and iterate over attributes to select naip tiles
+    # in desired phy_id.
     src = ogr.Open(shp)
     lyr = src.GetLayer()
     FileName = []
@@ -118,12 +119,19 @@ def ARVI(phy_id):
     paths = []
     query = ',%d,' % phy_id
     outputs = []
+    # Query is done by iterating over list of entire naip_qq shapefile.
+    # ogr.SetAttributeFilter throws SQL expression error due to needed commas
+    # around phy_id.
     for i in lyr:
         FileName.append(i.GetField('FileName'))
         phyregs.append(i.GetField('phyregs'))
+    # Get raw file names from naip_qq layer by iterating over phyregs list and
+    # retreving corresponding file name from filenames list.
     for j in range(len(phyregs)):
         if query in phyregs[j]:
             filtered.append(FileName[j])
+    # Edit filenames to get true file names, and create output filenames and
+    # paths.
     for i in range(len(filtered)):
         file = filtered[i]
         filename = '%s.tif' % file[:-13]
@@ -133,8 +141,10 @@ def ARVI(phy_id):
         out_path = '%s/%s' % (out_dir, arvi_file)
         outputs.append(out_path)
         paths.append(in_path)
+        # If output exists, move to next naip tile.
         if os.path.exists(outputs[i]):
             continue
+        # If naip tile is not found output file name of missing tile and skip.
         if not os.path.exists(paths[i]):
             print('Missing file: ', paths[i])
             continue
@@ -168,7 +178,6 @@ def ARVI(phy_id):
             dst_ds.GetRasterBand(1).WriteArray(arvi)
             dst_ds.FlushCache()
             dst_ds = None
-
 
 
 def nVARI(naip_dir, out_dir):
