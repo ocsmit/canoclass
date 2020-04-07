@@ -584,6 +584,7 @@ def batch_extra_trees(phy_id, smoothing=True):
     training_raster = config.training_raster
     fit_raster = config.training_fit_raster
 
+    # Query region name, create input and output folder paths
     region = get_phyregs_name(phy_id)
     print(region)
     region_dir = '%s/%s' % (results_dir, region)
@@ -594,6 +595,7 @@ def batch_extra_trees(phy_id, smoothing=True):
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
 
+    # Read training raster and corresponding raster file and shape to be trained
     y_raster = gdal.Open(training_raster)
     t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
     x_raster = gdal.Open(fit_raster)
@@ -601,11 +603,14 @@ def batch_extra_trees(phy_id, smoothing=True):
     y = t[t > 0]
     X = n[t > 0]
     X = X.reshape(-1, 1)
+    # Train Extra Trees Classifier
     clf = ExtraTreesClassifier(n_estimators=41, n_jobs=-1,
                                max_features=None,
                                min_samples_leaf=5, class_weight={1: 2, 2: 0.5})
     ras = clf.fit(X, y)
 
+    # Open naip_qq shapefile and iterate over attributes to select naip tiles
+    # in desired phy_id.
     src = ogr.Open(shp)
     lyr = src.GetLayer()
     FileName = []
@@ -617,28 +622,38 @@ def batch_extra_trees(phy_id, smoothing=True):
     for i in lyr:
         FileName.append(i.GetField('FileName'))
         phyregs.append(i.GetField('phyregs'))
+    # Get raw file names from naip_qq layer by iterating over phyregs list and
+    # retreving corresponding file name from filenames list.
     for j in range(len(phyregs)):
         if query in phyregs[j]:
             filtered.append(FileName[j])
     for i in range(len(filtered)):
+        # Edit filenames to get true file names, and create output filenames and
+        # paths.
         file = '%s%s' % ('arvi_', filtered[i])
         filename = '%s.tif' % file[:-13]
         in_path = '%s/%s' % (in_dir, filename)
         out_file = '%s/%s%s' % (out_dir, 'c_', filename)
         outputs.append(out_file)
         paths.append(in_path)
+        # Check if input file exists
         if not os.path.exists(paths[i]):
             print('Missing file: ', paths[i])
             continue
         if os.path.exists(paths[i]):
+            # If input file exists open with gdal and convert to NumPy array.
             r = gdal.Open(paths[i])
             class_raster = r.GetRasterBand(1).ReadAsArray().astype(
                 np.float32)
             class_array = class_raster.reshape(-1, 1)
+            # Apply classification
             ras_pre = ras.predict(class_array)
+            # Convert back to original shape and make data type Byte
             ras_final = ras_pre.reshape(class_raster.shape)
             ras_byte = ras_final.astype(dtype=np.byte)
             if smoothing:
+                # If smoothing = True, apply SciPy median_filter to array and
+                # then save.
                 smooth_ras = ndimage.median_filter(ras_byte, size=5)
                 driver = gdal.GetDriverByName('GTiff')
                 metadata = driver.GetMetadata()
@@ -656,6 +671,8 @@ def batch_extra_trees(phy_id, smoothing=True):
                 dst_ds.FlushCache()
                 dst_ds = None
             if not smoothing:
+                # If smoothing = False, save numpy array as raster with out
+                # smoothing
                 driver = gdal.GetDriverByName('GTiff')
                 metadata = driver.GetMetadata()
                 shape = class_raster.shape
