@@ -77,9 +77,11 @@ def get_arvi_path(shp, phy_id, arvi_dir):
         paths.append(path)
     return paths
 
+
 def norm(array):
     array_min, array_max = array.min(), array.max()
     return ((1 - 0) * ((array - array_min) / (array_max - array_min))) + 1
+
 
 def ARVI(phy_id):
     """
