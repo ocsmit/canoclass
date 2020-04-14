@@ -343,10 +343,7 @@ def tune_hyperparameter(training_raster, training_fit_raster):
         'n_estimators': n_estimators,
         'min_samples_leaf': min_samples_leaf
     }
-    weight = [{1: 1, 2: 2}]
-    etc = ExtraTreesClassifier(n_estimators=100, n_jobs=-1,
-                               max_features=None,
-                               min_samples_leaf=10, class_weight={1: 2, 2: 0.5})
+    etc = ExtraTreesClassifier(n_estimators=100, n_jobs=-1, max_features=None)
     clf = RandomizedSearchCV(etc, random_grid, random_state=0, verbose=3)
     clf.fit(X_train, y_train)
 
