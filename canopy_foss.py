@@ -345,12 +345,12 @@ def tune_hyperparameter(training_raster, training_fit_raster):
         'n_estimators': n_estimators,
         'min_samples_leaf': min_samples_leaf
     }
-    etc = ExtraTreesClassifier(n_estimators=100, n_jobs=-1, max_features=None)
+    etc = ExtraTreesClassifier(n_jobs=-1, max_features=None)
     clf = RandomizedSearchCV(etc, random_grid, random_state=0, verbose=3)
     clf.fit(X_train, y_train)
 
     print(clf.best_params_)
-
+    return clf.cv_results_
 
 # def random_forests_class(training_raster, training_fit_raster, in_raster,
 #                          out_tiff, smoothing=True):
@@ -686,3 +686,54 @@ def batch_extra_trees(phy_id, smoothing=True):
                 dst_ds.GetRasterBand(1).WriteArray(ras_byte)
                 dst_ds.FlushCache()
                 dst_ds = None
+
+
+def mosaic(phy_id):
+    """
+    This function mosaics all classified NAIP tiles within a physiographic
+    region using gdal_merge.py
+    ---
+    Args:
+        phy_id: int ::  Physio Id for the region to be processed.
+
+    """
+    shp = config.naipqq_shp
+    naip_dir = config.naip_dir
+    results_dir = config.results
+
+    region = get_phyregs_name(phy_id)
+    print(region)
+    region_dir = '%s/%s' % (results_dir, region)
+    dir_path = '%s/Outputs' % (region_dir)
+    src = ogr.Open(shp)
+    lyr = src.GetLayer()
+    FileName = []
+    phyregs = []
+    filtered = []
+    query = ',%d,' % phy_id
+    inputs = []
+    for i in lyr:
+        FileName.append(i.GetField('FileName'))
+        phyregs.append(i.GetField('phyregs'))
+    # Get raw file names from naip_qq layer by iterating over phyregs list and
+    # retreving corresponding file name from filenames list.
+    for j in range(len(phyregs)):
+        if query in phyregs[j]:
+            filtered.append(FileName[j])
+    for i in range(len(filtered)):
+        # Edit filenames to get true file names, and create output filenames and
+        # paths.
+        file = '%s%s' % ('arvi_', filtered[i])
+        filename = '%s.tif' % file[:-13]
+        in_file = '%s/%s%s' % (dir_path, 'c_', filename)
+        out_file = '%s/%s%s.tif' % (dir_path, 'mosaic_', region)
+        inputs.append(in_file)
+        # Check if input file exists
+        if not os.path.exists(inputs[i]):
+            print('Missing file: ', inputs[i])
+            continue
+
+    inputs_string = " ".join(inputs)
+    gdal_merge = "gdal_merge.py -n 0 -init 0 -o %s -of gtiff %s" % (out_file,
+                                                                inputs_string)
+    os.system(gdal_merge)
