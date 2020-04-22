@@ -754,4 +754,4 @@ def clip_mosaic(phy_id):
     where = "PHYSIO_ID = %d" % phy_id
 
     warp = gdal.Warp(clip_out, mosaiced, cutlineDSName=cutline,
-                     cutlineWHERE=where, cropToCutline=True)
+                     cutlineWhere=where, cropToCutline=True)
