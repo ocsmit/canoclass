@@ -103,7 +103,7 @@ def ARVI(phy_id):
     region = get_phyregs_name(phy_id)
     print(region)
     region_dir = '%s/%s' % (results_dir, region)
-    out_dir = '%s/Inputs' % (region_dir)
+    out_dir = '%s/Inputs' % region_dir
     if not os.path.exists(results_dir):
         os.mkdir(results_dir)
     if not os.path.exists(out_dir):
@@ -737,3 +737,21 @@ def mosaic(phy_id):
     gdal_merge = "gdal_merge.py -n 0 -init 0 -o %s -of gtiff %s" % (out_file,
                                                                 inputs_string)
     os.system(gdal_merge)
+
+
+def clip_mosaic(phy_id):
+    shp = config.naipqq_shp
+    results_dir = config.results
+
+    region = get_phyregs_name(phy_id)
+    print(region)
+    region_dir = '%s/%s' % (results_dir, region)
+    dir_path = '%s/Outputs' % (region_dir)
+    input_raster_name = 'mosaic_%s.tif' % region
+    in_raster = '%s/%s' % (dir_path, input_raster_name)
+    out_raster = '%s/c_%s' % (dir_path, input_raster_name)
+
+    where = "PHYSIO_ID = %d" % phy_id
+
+    warp = gdal.Warp(clip_out, mosaiced, cutlineDSName=cutline,
+                     cutlineWHERE=where, cropToCutline=True)
