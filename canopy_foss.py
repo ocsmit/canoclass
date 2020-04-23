@@ -60,7 +60,15 @@ def norm(array):
     return ((1 - 0) * ((array - array_min) / (array_max - array_min))) + 1
 
 
-def reproject_input(phy_id):
+def ARVI(phy_id):
+    """
+    This function walks through the input NAIP directory and performs the
+    ARVI calculation on each naip geotiff file and saves each new ARVI
+    geotiff in the output directory with the prefix 'arvi_'
+    ---
+    Args:
+        phy_id: Physiographic region ID
+    """
     workspace = config.workspace
     shp = config.naipqq_shp
     naip_dir = config.naip_dir
@@ -109,80 +117,9 @@ def reproject_input(phy_id):
     for i in range(len(filtered)):
         file = filtered[i]
         filename = '%s.tif' % file[:-13]
-        out_file = 'r_%s' % filename
+        arvi_file = 'arvi_%s' % filename
         folder = file[2:7]
         in_path = '%s/%s/%s' % (naip_dir, folder, filename)
-        out_path = '%s/%s' % (out_dir, out_file)
-        outputs.append(out_path)
-        paths.append(in_path)
-        # If output exists, move to next naip tile.
-        if os.path.exists(outputs[i]):
-            continue
-        # If naip tile is not found output file name of missing tile and skip.
-        if not os.path.exists(paths[i]):
-            print('Missing file: ', paths[i])
-            continue
-        if os.path.exists(paths[i]):
-            gdal.Warp(out_path, in_path, dstSRS='ESRI:102009')
-
-
-def ARVI(phy_id):
-    """
-    This function walks through the input NAIP directory and performs the
-    ARVI calculation on each naip geotiff file and saves each new ARVI
-    geotiff in the output directory with the prefix 'arvi_'
-    ---
-    Args:
-        phy_id: Physiographic region ID
-    """
-    workspace = config.workspace
-    shp = config.naipqq_shp
-    results_dir = config.results
-
-    # Get region name and create output file path
-    region = get_phyregs_name(phy_id)
-    print(region)
-    region_dir = '%s/%s' % (results_dir, region)
-    in_dir = '%s/Inputs' % region_dir
-    out_dir = in_dir
-    if not os.path.exists(results_dir):
-        os.mkdir(results_dir)
-    if not os.path.exists(out_dir):
-        os.mkdir(region_dir)
-        os.mkdir(out_dir)
-    gdal.PushErrorHandler('CPLQuietErrorHandler')
-    gdal.UseExceptions()
-    gdal.AllRegister()
-    np.seterr(divide='ignore', invalid='ignore')
-
-    # Open naip_qq shapefile and iterate over attributes to select naip tiles
-    # in desired phy_id.
-    src = ogr.Open(shp)
-    lyr = src.GetLayer()
-    FileName = []
-    phyregs = []
-    filtered = []
-    paths = []
-    query = ',%d,' % phy_id
-    outputs = []
-    # Query is done by iterating over list of entire naip_qq shapefile.
-    # ogr.SetAttributeFilter throws SQL expression error due to needed commas
-    # around phy_id.
-    for i in lyr:
-        FileName.append(i.GetField('FileName'))
-        phyregs.append(i.GetField('phyregs'))
-    # Get raw file names from naip_qq layer by iterating over phyregs list and
-    # retreving corresponding file name from filenames list.
-    for j in range(len(phyregs)):
-        if query in phyregs[j]:
-            filtered.append(FileName[j])
-    # Edit filenames to get true file names, and create output filenames and
-    # paths.
-    for i in range(len(filtered)):
-        file = filtered[i]
-        filename = 'r_%s.tif' % file[:-13]
-        arvi_file = 'arvi%s' % filename
-        in_path = '%s/%s' % (in_dir, filename)
         out_path = '%s/%s' % (out_dir, arvi_file)
         outputs.append(out_path)
         paths.append(in_path)
@@ -417,8 +354,8 @@ def batch_extra_trees(phy_id, smoothing=True):
     region = get_phyregs_name(phy_id)
     print(region)
     region_dir = '%s/%s' % (results_dir, region)
-    in_dir = '%s/Inputs' % (region_dir)
-    out_dir = '%s/Outputs' % (region_dir)
+    in_dir = '%s/Inputs' % region_dir
+    out_dir = '%s/Outputs' % region_dir
     if not os.path.exists(in_dir):
         raise IOError('Input directory does not exist.')
     if not os.path.exists(out_dir):
@@ -459,7 +396,7 @@ def batch_extra_trees(phy_id, smoothing=True):
     for i in range(len(filtered)):
         # Edit filenames to get true file names, and create output filenames and
         # paths.
-        file = '%s%s' % ('arvir_', filtered[i])
+        file = '%s%s' % ('arvi_', filtered[i])
         filename = '%s.tif' % file[:-13]
         in_path = '%s/%s' % (in_dir, filename)
         out_file = '%s/%s%s' % (out_dir, 'c_', filename)
@@ -519,6 +456,52 @@ def batch_extra_trees(phy_id, smoothing=True):
                 dst_ds = None
 
 
+def reproject_classified_tiles(phy_id):
+    workspace = config.workspace
+    shp = config.naipqq_shp
+    results_dir = config.results
+
+    region = get_phyregs_name(phy_id)
+    print(region)
+    region_dir = '%s/%s' % (results_dir, region)
+    in_dir = '%s/Outputs' % region_dir
+    out_dir = '%s/Outputs' % region_dir
+    if not os.path.exists(in_dir):
+        raise IOError('Input directory does not exist.')
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+    gdal.PushErrorHandler('CPLQuietErrorHandler')
+    gdal.UseExceptions()
+    gdal.AllRegister()
+    np.seterr(divide='ignore', invalid='ignore')
+
+    src = ogr.Open(shp)
+    lyr = src.GetLayer()
+    FileName = []
+    phyregs = []
+    filtered = []
+    paths = []
+    query = ',%d,' % phy_id
+    outputs = []
+    for i in lyr:
+        FileName.append(i.GetField('FileName'))
+        phyregs.append(i.GetField('phyregs'))
+    # Get raw file names from naip_qq layer by iterating over phyregs list and
+    # retreving corresponding file name from filenames list.
+    for j in range(len(phyregs)):
+        if query in phyregs[j]:
+            filtered.append(FileName[j])
+    for i in range(len(filtered)):
+        # Edit filenames to get true file names, and create output filenames and
+        # paths.
+        file = '%s%s' % ('c_arvi_', filtered[i])
+        filename = '%s.tif' % file[:-13]
+        in_path = '%s/%s' % (in_dir, filename)
+        out_file = '%s/%s%s' % (out_dir, 're_', filename)
+        outputs.append(out_file)
+        paths.append(in_path)
+        gdal.Warp(outputs[i], paths[i], dstSRS='ESRI:102009')
+
 def clip_classified_tiles(phy_id):
 
     shp = config.naipqq_shp
@@ -560,7 +543,7 @@ def mosaic(phy_id):
     for i in range(len(filtered)):
         # Edit filenames to get true file names, and create output filenames and
         # paths.
-        file = '%s%s' % ('arvir_', filtered[i])
+        file = '%s%s' % ('arvi_', filtered[i])
         filename = '%s.tif' % file[:-13]
         in_file = '%s/%s%s' % (dir_path, 'c_', filename)
         out_file = '%s/%s%s.tif' % (dir_path, 'mosaic_', region)
