@@ -503,7 +503,7 @@ def reproject_classified_tiles(phy_id):
         gdal.Warp(outputs[i], paths[i], dstSRS='EPSG:3857')
 
 
-def clip_classified_tiles(phy_id):
+def clip_reprojected_classified_tiles(phy_id):
 
     workspace = config.workspace
     shp = config.naipqq_shp
@@ -555,7 +555,7 @@ def clip_classified_tiles(phy_id):
         result = None
 
 
-def mosaic(phy_id):
+def mosaic_tiles(phy_id):
     """
     This function mosaics all classified NAIP tiles within a physiographic
     region using gdal_merge.py
@@ -590,9 +590,9 @@ def mosaic(phy_id):
     for i in range(len(filtered)):
         # Edit filenames to get true file names, and create output filenames and
         # paths.
-        file = '%s%s' % ('arvi_', filtered[i])
+        file = filtered[i]
         filename = '%s.tif' % file[:-13]
-        in_file = '%s/%s%s' % (dir_path, 'c_', filename)
+        in_file = '%s/%s%s' % (dir_path, 'cl_', filename)
         out_file = '%s/%s%s.tif' % (dir_path, 'mosaic_', region)
         inputs.append(in_file)
         # Check if input file exists
@@ -616,7 +616,7 @@ def clip_mosaic(phy_id):
     dir_path = '%s/Outputs' % (region_dir)
     input_raster_name = 'mosaic_%s.tif' % region
     in_raster = '%s/%s' % (dir_path, input_raster_name)
-    out_raster = '%s/c_%s' % (dir_path, input_raster_name)
+    out_raster = '%s/clipped_%s' % (dir_path, input_raster_name)
 
     where = "PHYSIO_ID = %d" % phy_id
 
@@ -624,3 +624,13 @@ def clip_mosaic(phy_id):
                      cutlineWhere=where, cropToCutline=True,
                      srcNodata='3', dstNodata='3',
                      outputType=gdal.GDT_Byte)
+
+
+def create_canopy_dataset(phy_id):
+    ARVI(phy_id)
+    batch_extra_trees(phy_id)
+    reproject_classified_tiles(phy_id)
+    clip_reprojected_classified_tiles(phy_id)
+    mosaic_tiles(phy_id)
+    clip_mosaic(phy_id)
+    print('Finished')
