@@ -55,32 +55,10 @@ def get_naip_path(shp, phy_id, naip_dir):
     return paths
 
 
-def get_arvi_path(shp, phy_id, arvi_dir):
-    src = ogr.Open(shp)
-    lyr = src.GetLayer()
-    FileName = []
-    phyregs = []
-    filtered = []
-    paths = []
-    query = ',%d,' % phy_id
-    for i in lyr:
-        FileName.append(i.GetField('FileName'))
-        phyregs.append(i.GetField('phyregs'))
-    for j in range(len(phyregs)):
-        if query in phyregs[j]:
-            filtered.append(FileName[j])
-    for i in range(len(filtered)):
-        file = '%s%s' % ('arvi_', filtered[i])
-        filename = '%s.tif' % file[:-13]
-        folder = file[2:7]
-        path = '%s/%s' % (arvi_dir, filename)
-        paths.append(path)
-    return paths
-
-
 def norm(array):
     array_min, array_max = array.min(), array.max()
     return ((1 - 0) * ((array - array_min) / (array_max - array_min))) + 1
+
 
 def reproject_input(phy_id):
     workspace = config.workspace
@@ -145,7 +123,7 @@ def reproject_input(phy_id):
             print('Missing file: ', paths[i])
             continue
         if os.path.exists(paths[i]):
-            gdal.Warp(out_path, in_path, dstSRS='EPSG:2163', dstNodata='-9999')
+            gdal.Warp(out_path, in_path, dstSRS='ESRI:102009')
 
 
 def ARVI(phy_id):
@@ -159,16 +137,14 @@ def ARVI(phy_id):
     """
     workspace = config.workspace
     shp = config.naipqq_shp
-    naip_dir = config.naip_dir
     results_dir = config.results
 
-    if not os.path.exists(naip_dir):
-        print('NAIP directory not found')
     # Get region name and create output file path
     region = get_phyregs_name(phy_id)
     print(region)
     region_dir = '%s/%s' % (results_dir, region)
-    out_dir = '%s/Inputs' % region_dir
+    in_dir = '%s/Inputs' % region_dir
+    out_dir = in_dir
     if not os.path.exists(results_dir):
         os.mkdir(results_dir)
     if not os.path.exists(out_dir):
@@ -204,10 +180,9 @@ def ARVI(phy_id):
     # paths.
     for i in range(len(filtered)):
         file = filtered[i]
-        filename = '%s.tif' % file[:-13]
-        arvi_file = 'arvi_%s' % filename
-        folder = file[2:7]
-        in_path = '%s/%s/%s' % (naip_dir, folder, filename)
+        filename = 'r_%s.tif' % file[:-13]
+        arvi_file = 'arvi%s' % filename
+        in_path = '%s/%s' % (in_dir, filename)
         out_path = '%s/%s' % (out_dir, arvi_file)
         outputs.append(out_path)
         paths.append(in_path)
@@ -241,9 +216,10 @@ def ARVI(phy_id):
                                    ysize=shape[0],
                                    bands=1,
                                    eType=gdal.GDT_Float32)
-            srs = osr.SpatialReference()
-            srs.ImportFromEPSG(1380)
-            dst_ds.SetProjection(srs.ExportToWkt())
+            proj = snap.GetProjection()
+            geo = snap.GetGeoTransform()
+            dst_ds.SetGeoTransform(geo)
+            dst_ds.SetProjection(proj)
             dst_ds.GetRasterBand(1).WriteArray(arvi)
             dst_ds.FlushCache()
             dst_ds = None
@@ -253,7 +229,7 @@ def nVARI(naip_dir, out_dir):
     """
     This function walks through the input NAIP directory and performs the
     VARI calculation on each naip geotiff file and saves each new VARI
-    geotiff in the output directory with the prefix 'arvi_'
+    geotiff in the output directory with the prefix 'arvi'
     ---
     Args:
         naip_dir: Folder which contains all subfolders of naip imagery
@@ -693,7 +669,7 @@ def batch_extra_trees(phy_id, smoothing=True):
     for i in range(len(filtered)):
         # Edit filenames to get true file names, and create output filenames and
         # paths.
-        file = '%s%s' % ('arvi_', filtered[i])
+        file = '%s%s' % ('arvir_', filtered[i])
         filename = '%s.tif' % file[:-13]
         in_path = '%s/%s' % (in_dir, filename)
         out_file = '%s/%s%s' % (out_dir, 'c_', filename)
@@ -794,7 +770,7 @@ def mosaic(phy_id):
     for i in range(len(filtered)):
         # Edit filenames to get true file names, and create output filenames and
         # paths.
-        file = '%s%s' % ('arvi_', filtered[i])
+        file = '%s%s' % ('arvir_', filtered[i])
         filename = '%s.tif' % file[:-13]
         in_file = '%s/%s%s' % (dir_path, 'c_', filename)
         out_file = '%s/%s%s.tif' % (dir_path, 'mosaic_', region)
