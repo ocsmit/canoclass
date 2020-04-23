@@ -607,7 +607,7 @@ def mosaic(phy_id):
 
 
 def clip_mosaic(phy_id):
-    shp = config.naipqq_shp
+    shp = config.phyreg_lyr
     results_dir = config.results
 
     region = get_phyregs_name(phy_id)
@@ -620,7 +620,7 @@ def clip_mosaic(phy_id):
 
     where = "PHYSIO_ID = %d" % phy_id
 
-    warp = gdal.Warp(clip_out, mosacied, cutlineDSName=cutline,
+    warp = gdal.Warp(out_raster, in_raster, cutlineDSName=shp,
                      cutlineWhere=where, cropToCutline=True,
                      srcNodata='3', dstNodata='3',
                      outputType=gdal.GDT_Byte)
