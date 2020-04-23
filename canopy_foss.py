@@ -500,13 +500,60 @@ def reproject_classified_tiles(phy_id):
         out_file = '%s/%s%s' % (out_dir, 're_', filename)
         outputs.append(out_file)
         paths.append(in_path)
-        gdal.Warp(outputs[i], paths[i], dstSRS='ESRI:102009')
+        gdal.Warp(outputs[i], paths[i], dstSRS='EPSG:3857')
+
 
 def clip_classified_tiles(phy_id):
 
+    workspace = config.workspace
     shp = config.naipqq_shp
-    naip_dir = config.naip_dir
     results_dir = config.results
+
+    region = get_phyregs_name(phy_id)
+    print(region)
+    region_dir = '%s/%s' % (results_dir, region)
+    in_dir = '%s/Outputs' % region_dir
+    out_dir = '%s/Outputs' % region_dir
+    if not os.path.exists(in_dir):
+        raise IOError('Input directory does not exist.')
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+    gdal.PushErrorHandler('CPLQuietErrorHandler')
+    gdal.UseExceptions()
+    gdal.AllRegister()
+    np.seterr(divide='ignore', invalid='ignore')
+
+    src = ogr.Open(shp)
+    lyr = src.GetLayer()
+    FileName = []
+    phyregs = []
+    filtered = []
+    paths = []
+    query = ',%d,' % phy_id
+    outputs = []
+    for i in lyr:
+        FileName.append(i.GetField('FileName'))
+        phyregs.append(i.GetField('phyregs'))
+    # Get raw file names from naip_qq layer by iterating over phyregs list and
+    # retreving corresponding file name from filenames list.
+    for j in range(len(phyregs)):
+        if query in phyregs[j]:
+            filtered.append(FileName[j])
+    for i in range(len(filtered)):
+        # Edit filenames to get true file names, and create output filenames and
+        # paths.
+        file = '%s%s' % ('re_c_arvi_', filtered[i])
+        filename = '%s.tif' % file[:-13]
+        in_path = '%s/%s' % (in_dir, filename)
+        out_file = '%s/%s%s' % (out_dir, 'cl_', filename[10:])
+        outputs.append(out_file)
+        paths.append(in_path)
+        where = "FileName = '%s'" % filtered[i]
+        result = gdal.Warp(out_file, in_path, cutlineDSName=shp,
+                           cutlineWhere=where, cropToCutline=True,
+                           outputType=gdal.GDT_Byte)
+        result = None
+
 
 def mosaic(phy_id):
     """
