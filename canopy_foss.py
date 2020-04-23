@@ -11,7 +11,7 @@
 # ==============================================================================
 
 import os
-from osgeo import gdal, ogr
+from osgeo import gdal, ogr, osr
 import numpy as np
 import config
 from scipy import ndimage
@@ -81,6 +81,71 @@ def get_arvi_path(shp, phy_id, arvi_dir):
 def norm(array):
     array_min, array_max = array.min(), array.max()
     return ((1 - 0) * ((array - array_min) / (array_max - array_min))) + 1
+
+def reproject_input(phy_id):
+    workspace = config.workspace
+    shp = config.naipqq_shp
+    naip_dir = config.naip_dir
+    results_dir = config.results
+
+    if not os.path.exists(naip_dir):
+        print('NAIP directory not found')
+    # Get region name and create output file path
+    region = get_phyregs_name(phy_id)
+    print(region)
+    region_dir = '%s/%s' % (results_dir, region)
+    out_dir = '%s/Inputs' % region_dir
+    if not os.path.exists(results_dir):
+        os.mkdir(results_dir)
+    if not os.path.exists(out_dir):
+        os.mkdir(region_dir)
+        os.mkdir(out_dir)
+    gdal.PushErrorHandler('CPLQuietErrorHandler')
+    gdal.UseExceptions()
+    gdal.AllRegister()
+    np.seterr(divide='ignore', invalid='ignore')
+
+    # Open naip_qq shapefile and iterate over attributes to select naip tiles
+    # in desired phy_id.
+    src = ogr.Open(shp)
+    lyr = src.GetLayer()
+    FileName = []
+    phyregs = []
+    filtered = []
+    paths = []
+    query = ',%d,' % phy_id
+    outputs = []
+    # Query is done by iterating over list of entire naip_qq shapefile.
+    # ogr.SetAttributeFilter throws SQL expression error due to needed commas
+    # around phy_id.
+    for i in lyr:
+        FileName.append(i.GetField('FileName'))
+        phyregs.append(i.GetField('phyregs'))
+    # Get raw file names from naip_qq layer by iterating over phyregs list and
+    # retreving corresponding file name from filenames list.
+    for j in range(len(phyregs)):
+        if query in phyregs[j]:
+            filtered.append(FileName[j])
+    # Edit filenames to get true file names, and create output filenames and
+    # paths.
+    for i in range(len(filtered)):
+        file = filtered[i]
+        filename = '%s.tif' % file[:-13]
+        out_file = 'r_%s' % filename
+        folder = file[2:7]
+        in_path = '%s/%s/%s' % (naip_dir, folder, filename)
+        out_path = '%s/%s' % (out_dir, out_file)
+        outputs.append(out_path)
+        paths.append(in_path)
+        # If output exists, move to next naip tile.
+        if os.path.exists(outputs[i]):
+            continue
+        # If naip tile is not found output file name of missing tile and skip.
+        if not os.path.exists(paths[i]):
+            print('Missing file: ', paths[i])
+            continue
+        if os.path.exists(paths[i]):
+            gdal.Warp(out_path, in_path, dstSRS='EPSG:2163', dstNodata='-9999')
 
 
 def ARVI(phy_id):
@@ -176,10 +241,9 @@ def ARVI(phy_id):
                                    ysize=shape[0],
                                    bands=1,
                                    eType=gdal.GDT_Float32)
-            proj = snap.GetProjection()
-            geo = snap.GetGeoTransform()
-            dst_ds.SetGeoTransform(geo)
-            dst_ds.SetProjection(proj)
+            srs = osr.SpatialReference()
+            srs.ImportFromEPSG(1380)
+            dst_ds.SetProjection(srs.ExportToWkt())
             dst_ds.GetRasterBand(1).WriteArray(arvi)
             dst_ds.FlushCache()
             dst_ds = None
@@ -292,6 +356,7 @@ def prepare_training_data(field='id'):
 
     print('Vector to raster complete.')
     return out_raster
+
 
 # ==============================================================================
 # Classification Functions:
@@ -687,6 +752,12 @@ def batch_extra_trees(phy_id, smoothing=True):
                 dst_ds.FlushCache()
                 dst_ds = None
 
+
+def clip_classified_tiles(phy_id):
+
+    shp = config.naipqq_shp
+    naip_dir = config.naip_dir
+    results_dir = config.results
 
 def mosaic(phy_id):
     """
