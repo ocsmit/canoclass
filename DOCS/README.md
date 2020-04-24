@@ -27,13 +27,19 @@ process our data and no true method to tweak it to suit our needs.
 ## Index functions
 
 **ARVI: ~ NIR based index | Main Focus** 
-
-**nVARI:**
  
 ## Classification 
 
-**Random Forests**
-
 **Extra Trees Classifier** 
+
+## Full Process
+
+  1. Created ARVI
+  2. Create Training Data and covert to raster
+  3. Classify ARVI
+  4. Reproject classified tiles
+  5. Clip reproject classified tiles to NAIP QQ seamlines
+  6. Mosaic all tiles to region 
+  7. Clip mosacied raster to region outline
 
 For technical information of each function see [TECHNICAL](TECHNICAL.md)
