@@ -425,10 +425,10 @@ def batch_extra_trees(phy_id, smoothing=True):
                 metadata = driver.GetMetadata()
                 shape = class_raster.shape
                 dst_ds = driver.Create(outputs[i],
-                                       xsize=shape[1],
-                                       ysize=shape[0],
-                                       bands=1,
-                                       eType=gdal.GDT_Byte)
+                                       shape[1],
+                                       shape[0],
+                                       1,
+                                       gdal.GDT_Byte, ['NBITS=2'])
                 proj = r.GetProjection()
                 geo = r.GetGeoTransform()
                 dst_ds.SetGeoTransform(geo)
@@ -443,10 +443,10 @@ def batch_extra_trees(phy_id, smoothing=True):
                 metadata = driver.GetMetadata()
                 shape = class_raster.shape
                 dst_ds = driver.Create(outputs[i],
-                                       xsize=shape[1],
-                                       ysize=shape[0],
-                                       bands=1,
-                                       eType=gdal.GDT_Byte)
+                                       shape[1],
+                                       shape[0],
+                                       1,
+                                       gdal.GDT_Byte, ['NBITS=2'])
                 proj = r.GetProjection()
                 geo = r.GetGeoTransform()
                 dst_ds.SetGeoTransform(geo)
@@ -500,7 +500,8 @@ def reproject_classified_tiles(phy_id):
         out_file = '%s/%s%s' % (out_dir, 're_', filename)
         outputs.append(out_file)
         paths.append(in_path)
-        gdal.Warp(outputs[i], paths[i], dstSRS='EPSG:3857')
+        gdal.Warp(outputs[i], paths[i], dstSRS='EPSG:3857',
+                  creationOptions=["NBITS=2"])
 
 
 def clip_reprojected_classified_tiles(phy_id):
@@ -551,7 +552,8 @@ def clip_reprojected_classified_tiles(phy_id):
         where = "FileName = '%s'" % filtered[i]
         result = gdal.Warp(out_file, in_path, cutlineDSName=shp,
                            cutlineWhere=where, cropToCutline=True,
-                           outputType=gdal.GDT_Byte)
+                           outputType=gdal.GDT_Byte,
+                           creationOptions=["NBITS=2"])
         result = None
 
 
@@ -601,7 +603,8 @@ def mosaic_tiles(phy_id):
             continue
 
     inputs_string = " ".join(inputs)
-    gdal_merge = "gdal_merge.py -n 0 -init 0 -o %s -of gtiff %s" % (out_file,
+    gdal_merge = "gdal_merge.py -co NBITS=2 -n 0 -init 0 -o %s -of gtiff %s" % (
+        out_file,
                                                                 inputs_string)
     os.system(gdal_merge)
 
@@ -623,7 +626,7 @@ def clip_mosaic(phy_id):
     warp = gdal.Warp(out_raster, in_raster, cutlineDSName=shp,
                      cutlineWhere=where, cropToCutline=True,
                      srcNodata='3', dstNodata='3',
-                     outputType=gdal.GDT_Byte)
+                     outputType=gdal.GDT_Byte, creationOptions=["NBITS=2"])
 
 
 def create_canopy_dataset(phy_id):
