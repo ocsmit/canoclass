@@ -41,5 +41,8 @@ process our data and no true method to tweak it to suit our needs.
   5. Clip reproject classified tiles to NAIP QQ seamlines
   6. Mosaic all tiles to region 
   7. Clip mosacied raster to region outline
+  
+  **Full data creation process except traing data and optimization run with 
+  ``create_canopy_dataset``**
 
 For technical information of each function see [TECHNICAL](TECHNICAL.md)
