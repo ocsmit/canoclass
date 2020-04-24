@@ -637,3 +637,4 @@ def create_canopy_dataset(phy_id):
     mosaic_tiles(phy_id)
     clip_mosaic(phy_id)
     print('Finished')
+    
