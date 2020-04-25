@@ -576,8 +576,7 @@ def mosaic_tiles(phy_id):
 
     inputs_string = " ".join(inputs)
     gdal_merge = "gdal_merge.py -co NBITS=2 -n 0 -init 0 -o %s -of gtiff %s" % (
-        out_file,
-                                                                inputs_string)
+        out_file, inputs_string)
     os.system(gdal_merge)
 
 
