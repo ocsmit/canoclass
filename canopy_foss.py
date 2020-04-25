@@ -18,6 +18,7 @@ from scipy import ndimage
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.model_selection import train_test_split
+from rindcalc import naip
 
 
 def get_phyregs_name(phy_id):
@@ -131,35 +132,7 @@ def ARVI(phy_id):
             print('Missing file: ', paths[i])
             continue
         if os.path.exists(paths[i]):
-            # Open with gdal & create numpy arrays
-            naip = gdal.Open(paths[i])
-            red_band = naip.GetRasterBand(1).ReadAsArray() \
-                .astype(np.float32)
-            blue_band = naip.GetRasterBand(3).ReadAsArray() \
-                .astype(np.float32)
-            nir_band = naip.GetRasterBand(4).ReadAsArray() \
-                .astype(np.float32)
-            snap = naip
-            # Perform Calculation
-            a = (nir_band - (2 * red_band) + blue_band)
-            b = (nir_band + (2 * red_band) + blue_band)
-            arvi = a / b
-            # Save Raster
-            driver = gdal.GetDriverByName('GTiff')
-            metadata = driver.GetMetadata()
-            shape = arvi.shape
-            dst_ds = driver.Create(outputs[i],
-                                   xsize=shape[1],
-                                   ysize=shape[0],
-                                   bands=1,
-                                   eType=gdal.GDT_Float32)
-            proj = snap.GetProjection()
-            geo = snap.GetGeoTransform()
-            dst_ds.SetGeoTransform(geo)
-            dst_ds.SetProjection(proj)
-            dst_ds.GetRasterBand(1).WriteArray(arvi)
-            dst_ds.FlushCache()
-            dst_ds = None
+            naip.ARVI(paths[i], outputs[i])
 
 
 def prepare_training_data(field='id'):
@@ -637,4 +610,3 @@ def create_canopy_dataset(phy_id):
     mosaic_tiles(phy_id)
     clip_mosaic(phy_id)
     print('Finished')
-    
