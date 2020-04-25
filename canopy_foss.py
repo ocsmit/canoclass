@@ -16,8 +16,7 @@ import numpy as np
 import config
 from scipy import ndimage
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
-from sklearn.model_selection import RandomizedSearchCV
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import RandomizedSearchCV, train_test_split
 from rindcalc import naip
 
 
