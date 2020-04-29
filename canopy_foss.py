@@ -430,54 +430,6 @@ def batch_extra_trees(phy_id, smoothing=True):
                 dst_ds = None
 
 
-def reproject_classified_tiles(phy_id):
-    workspace = config.workspace
-    shp = config.naipqq_shp
-    results_dir = config.results
-
-    region = get_phyregs_name(phy_id)
-    print(region)
-    region_dir = '%s/%s' % (results_dir, region)
-    in_dir = '%s/Outputs' % region_dir
-    out_dir = '%s/Outputs' % region_dir
-    if not os.path.exists(in_dir):
-        raise IOError('Input directory does not exist.')
-    if not os.path.exists(out_dir):
-        os.mkdir(out_dir)
-    gdal.PushErrorHandler('CPLQuietErrorHandler')
-    gdal.UseExceptions()
-    gdal.AllRegister()
-    np.seterr(divide='ignore', invalid='ignore')
-
-    src = ogr.Open(shp)
-    lyr = src.GetLayer()
-    FileName = []
-    phyregs = []
-    filtered = []
-    paths = []
-    query = '%d' % phy_id
-    outputs = []
-    for i in lyr:
-        FileName.append(i.GetField('FileName'))
-        phyregs.append(str(i.GetField('PHYSIO_ID')))
-    # Get raw file names from naip_qq layer by iterating over phyregs list and
-    # retreving corresponding file name from filenames list.
-    for j in range(len(phyregs)):
-        if query == phyregs[j]:
-            filtered.append(FileName[j])
-    for i in range(len(filtered)):
-        # Edit filenames to get true file names, and create output filenames and
-        # paths.
-        file = '%s%s' % ('c_arvi_', filtered[i])
-        filename = '%s.tif' % file[:-13]
-        in_path = '%s/%s' % (in_dir, filename)
-        out_file = '%s/%s%s' % (out_dir, 're_', filename)
-        outputs.append(out_file)
-        paths.append(in_path)
-        gdal.Warp(outputs[i], paths[i], dstSRS='EPSG:5070',
-                  creationOptions=["NBITS=2"])
-
-
 def clip_reproject_classified_tiles(phy_id):
 
     workspace = config.workspace
@@ -525,7 +477,8 @@ def clip_reproject_classified_tiles(phy_id):
         out_file = '%s/%s%s' % (out_dir, 'cl_', filename)
         where = "FileName = '%s'" % filtered[i]
         result = gdal.Warp(out_file, in_path, dstNodata=3, dstSRS='EPSG:5070',
-                           cutlineDSName=clip_shp, cutlineWhere=where,
+                           xRes=1, yRes=1, cutlineDSName=clip_shp,
+                           cutlineWhere=where,
                            cropToCutline=True, outputType=gdal.GDT_Byte,
                            creationOptions=["NBITS=2"]
                            )
@@ -597,7 +550,7 @@ def clip_mosaic(phy_id):
 
     where = "PHYSIO_ID = %d" % phy_id
 
-    warp = gdal.Warp(out_raster, in_raster, cutlineDSName=shp,
+    warp = gdal.Warp(out_raster, in_raster, xRes=1, yRes=1, cutlineDSName=shp,
                      cutlineWhere=where, cropToCutline=True,
                      srcNodata='3', dstNodata='3',
                      outputType=gdal.GDT_Byte, creationOptions=["NBITS=2"],
