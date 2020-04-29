@@ -467,7 +467,6 @@ def clip_reproject_classified_tiles(phy_id):
     for j in range(len(phyregs)):
         if query == phyregs[j]:
             filtered.append(FileName[j])
-    print(len(filtered))
     for i in range(len(filtered)):
         # Edit filenames to get true file names, and create output filenames and
         # paths.
