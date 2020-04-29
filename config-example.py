@@ -5,6 +5,7 @@ class_directory = '%s/%%s/outputs' % workspace
 
 data = '%s/Data' % workspace
 phyreg_lyr = '%s/Physiographic_Districts_GA.shp' % data
+clip_naip = '%s/ga_naip_clip.shp' % data
 naipqq_shp = '%s/ga_naip15qq.shp' % data
 training_shp = '%s/training_shp.shp' % data
 training_raster = '%s/training_raster.tif' % data
