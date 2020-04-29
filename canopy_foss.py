@@ -39,12 +39,12 @@ def get_naip_path(shp, phy_id, naip_dir):
     phyregs = []
     filtered = []
     paths = []
-    query = ',%d,' % phy_id
+    query = '%d' % phy_id
     for i in lyr:
         FileName.append(i.GetField('FileName'))
-        phyregs.append(i.GetField('phyregs'))
+        phyregs.append(str(i.GetField('PHYSIO_ID')))
     for j in range(len(phyregs)):
-        if query in phyregs[j]:
+        if query == phyregs[j]:
             filtered.append(FileName[j])
     for i in range(len(filtered)):
         file = filtered[i]
@@ -99,18 +99,18 @@ def ARVI(phy_id):
     phyregs = []
     filtered = []
     paths = []
-    query = ',%d,' % phy_id
+    query = '%d' % phy_id
     outputs = []
     # Query is done by iterating over list of entire naip_qq shapefile.
     # ogr.SetAttributeFilter throws SQL expression error due to needed commas
     # around phy_id.
     for i in lyr:
         FileName.append(i.GetField('FileName'))
-        phyregs.append(i.GetField('phyregs'))
+        phyregs.append(str(i.GetField('PHYSIO_ID')))
     # Get raw file names from naip_qq layer by iterating over phyregs list and
     # retreving corresponding file name from filenames list.
     for j in range(len(phyregs)):
-        if query in phyregs[j]:
+        if query == phyregs[j]:
             filtered.append(FileName[j])
     # Edit filenames to get true file names, and create output filenames and
     # paths.
@@ -355,15 +355,15 @@ def batch_extra_trees(phy_id, smoothing=True):
     phyregs = []
     filtered = []
     paths = []
-    query = ',%d,' % phy_id
+    query = '%d' % phy_id
     outputs = []
     for i in lyr:
         FileName.append(i.GetField('FileName'))
-        phyregs.append(i.GetField('phyregs'))
+        phyregs.append(str(i.GetField('PHYSIO_ID')))
     # Get raw file names from naip_qq layer by iterating over phyregs list and
     # retreving corresponding file name from filenames list.
     for j in range(len(phyregs)):
-        if query in phyregs[j]:
+        if query == phyregs[j]:
             filtered.append(FileName[j])
     for i in range(len(filtered)):
         # Edit filenames to get true file names, and create output filenames and
@@ -374,6 +374,8 @@ def batch_extra_trees(phy_id, smoothing=True):
         out_file = '%s/%s%s' % (out_dir, 'c_', filename)
         outputs.append(out_file)
         paths.append(in_path)
+        if os.path.exists(out_file):
+            continue
         # Check if input file exists
         if not os.path.exists(paths[i]):
             print('Missing file: ', paths[i])
@@ -453,15 +455,15 @@ def reproject_classified_tiles(phy_id):
     phyregs = []
     filtered = []
     paths = []
-    query = ',%d,' % phy_id
+    query = '%d' % phy_id
     outputs = []
     for i in lyr:
         FileName.append(i.GetField('FileName'))
-        phyregs.append(i.GetField('phyregs'))
+        phyregs.append(str(i.GetField('PHYSIO_ID')))
     # Get raw file names from naip_qq layer by iterating over phyregs list and
     # retreving corresponding file name from filenames list.
     for j in range(len(phyregs)):
-        if query in phyregs[j]:
+        if query == phyregs[j]:
             filtered.append(FileName[j])
     for i in range(len(filtered)):
         # Edit filenames to get true file names, and create output filenames and
@@ -472,14 +474,15 @@ def reproject_classified_tiles(phy_id):
         out_file = '%s/%s%s' % (out_dir, 're_', filename)
         outputs.append(out_file)
         paths.append(in_path)
-        gdal.Warp(outputs[i], paths[i], dstSRS='EPSG:3857',
+        gdal.Warp(outputs[i], paths[i], dstSRS='EPSG:5070',
                   creationOptions=["NBITS=2"])
 
 
-def clip_reprojected_classified_tiles(phy_id):
+def clip_reproject_classified_tiles(phy_id):
 
     workspace = config.workspace
     shp = config.naipqq_shp
+    clip_shp = config.clip_naip
     results_dir = config.results
 
     region = get_phyregs_name(phy_id)
@@ -502,30 +505,30 @@ def clip_reprojected_classified_tiles(phy_id):
     phyregs = []
     filtered = []
     paths = []
-    query = ',%d,' % phy_id
+    query = '%d' % phy_id
     outputs = []
     for i in lyr:
         FileName.append(i.GetField('FileName'))
-        phyregs.append(i.GetField('phyregs'))
+        phyregs.append(str(i.GetField('PHYSIO_ID')))
     # Get raw file names from naip_qq layer by iterating over phyregs list and
     # retreving corresponding file name from filenames list.
     for j in range(len(phyregs)):
-        if query in phyregs[j]:
+        if query == phyregs[j]:
             filtered.append(FileName[j])
+    print(len(filtered))
     for i in range(len(filtered)):
         # Edit filenames to get true file names, and create output filenames and
         # paths.
-        file = '%s%s' % ('re_c_arvi_', filtered[i])
+        file = '%s%s' % ('c_arvi_', filtered[i])
         filename = '%s.tif' % file[:-13]
         in_path = '%s/%s' % (in_dir, filename)
-        out_file = '%s/%s%s' % (out_dir, 'cl_', filename[10:])
-        outputs.append(out_file)
-        paths.append(in_path)
+        out_file = '%s/%s%s' % (out_dir, 'cl_', filename)
         where = "FileName = '%s'" % filtered[i]
-        result = gdal.Warp(out_file, in_path, cutlineDSName=shp,
-                           cutlineWhere=where, cropToCutline=True,
-                           outputType=gdal.GDT_Byte,
-                           creationOptions=["NBITS=2"])
+        result = gdal.Warp(out_file, in_path, dstNodata=3, dstSRS='EPSG:5070',
+                           cutlineDSName=clip_shp, cutlineWhere=where,
+                           cropToCutline=True, outputType=gdal.GDT_Byte,
+                           creationOptions=["NBITS=2"]
+                           )
         result = None
 
 
@@ -551,22 +554,22 @@ def mosaic_tiles(phy_id):
     FileName = []
     phyregs = []
     filtered = []
-    query = ',%d,' % phy_id
+    query = '%d' % phy_id
     inputs = []
     for i in lyr:
         FileName.append(i.GetField('FileName'))
-        phyregs.append(i.GetField('phyregs'))
+        phyregs.append(str(i.GetField('PHYSIO_ID')))
     # Get raw file names from naip_qq layer by iterating over phyregs list and
     # retreving corresponding file name from filenames list.
     for j in range(len(phyregs)):
-        if query in phyregs[j]:
+        if query == phyregs[j]:
             filtered.append(FileName[j])
     for i in range(len(filtered)):
         # Edit filenames to get true file names, and create output filenames and
         # paths.
         file = filtered[i]
         filename = '%s.tif' % file[:-13]
-        in_file = '%s/%s%s' % (dir_path, 'cl_', filename)
+        in_file = '%s/%s%s' % (dir_path, 'cl_c_arvi_', filename)
         out_file = '%s/%s%s.tif' % (dir_path, 'mosaic_', region)
         inputs.append(in_file)
         # Check if input file exists
@@ -575,7 +578,7 @@ def mosaic_tiles(phy_id):
             continue
 
     inputs_string = " ".join(inputs)
-    gdal_merge = "gdal_merge.py -co NBITS=2 -n 0 -init 0 -o %s -of gtiff %s" % (
+    gdal_merge = "gdal_merge.py -co NBITS=2 -n 3 -init 3 -o %s -of gtiff %s" % (
         out_file, inputs_string)
     os.system(gdal_merge)
 
@@ -597,14 +600,14 @@ def clip_mosaic(phy_id):
     warp = gdal.Warp(out_raster, in_raster, cutlineDSName=shp,
                      cutlineWhere=where, cropToCutline=True,
                      srcNodata='3', dstNodata='3',
-                     outputType=gdal.GDT_Byte, creationOptions=["NBITS=2"])
+                     outputType=gdal.GDT_Byte, creationOptions=["NBITS=2"],
+                     dstSRS='EPSG:5070' )
 
 
 def create_canopy_dataset(phy_id):
     ARVI(phy_id)
     batch_extra_trees(phy_id)
-    reproject_classified_tiles(phy_id)
-    clip_reprojected_classified_tiles(phy_id)
+    clip_reproject_classified_tiles(phy_id)
     mosaic_tiles(phy_id)
     clip_mosaic(phy_id)
     print('Finished')
