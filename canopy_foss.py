@@ -1,24 +1,32 @@
 # ==============================================================================
-# Preprocessing Functions:
-# ------------------------
-#       Index Calculations:
-#       -- ARVI(naip_dir, out_dir)
-#       -- VARI(naip_dir, out_dir)
-#       -- GRVI(naip_dir, out_dir)
+# Title: canopy_foss.py
+# Author: Owen Smith, University of North Georgia
+# Canopy data creation process:
+# -----------------------------
+#       * View readme to see needed data
+#       * Ensure all configuration parameters are set before starting process.
+#       * To create training data and determine paramters for Extra Trees
+#         Classifier, use training.py which contains all preprocessing function-
+#         s.
 #
-#       Training Data Prep:
-#       -- prepare_training_data(vector, ref_raster, out_raster, field='id')
+#       1. ARVI(phy_id)
+#       2. batch_extra_trees(phy_id, smoothing=True)
+#       3. clip_reproject_classified_tiles(phy_id)
+#       4. mosaic_tiles(phy_id)
+#       5. clip_mosaic(phy_id)
+#
+#       wrapper function to perform all steps:
+#           * create_canopy_dataset(phy_id)
+#
 # ==============================================================================
 
 import os
-from osgeo import gdal, ogr, osr
+from osgeo import gdal, ogr
 import numpy as np
 import config
 from scipy import ndimage
-from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
-from sklearn.model_selection import RandomizedSearchCV, train_test_split
+from sklearn.ensemble import ExtraTreesClassifier
 from rindcalc import naip
-
 
 def get_phyregs_name(phy_id):
     shp = config.phyreg_lyr
@@ -32,34 +40,6 @@ def get_phyregs_name(phy_id):
     return name
 
 
-def get_naip_path(shp, phy_id, naip_dir):
-    src = ogr.Open(shp)
-    lyr = src.GetLayer()
-    FileName = []
-    phyregs = []
-    filtered = []
-    paths = []
-    query = '%d' % phy_id
-    for i in lyr:
-        FileName.append(i.GetField('FileName'))
-        phyregs.append(str(i.GetField('PHYSIO_ID')))
-    for j in range(len(phyregs)):
-        if query == phyregs[j]:
-            filtered.append(FileName[j])
-    for i in range(len(filtered)):
-        file = filtered[i]
-        filename = '%s.tif' % file[:-13]
-        folder = file[2:7]
-        path = '%s/%s/%s' % (naip_dir, folder, filename)
-        paths.append(path)
-    return paths
-
-
-def norm(array):
-    array_min, array_max = array.min(), array.max()
-    return ((1 - 0) * ((array - array_min) / (array_max - array_min))) + 1
-
-
 def ARVI(phy_id):
     """
     This function walks through the input NAIP directory and performs the
@@ -67,7 +47,7 @@ def ARVI(phy_id):
     geotiff in the output directory with the prefix 'arvi_'
     ---
     Args:
-        phy_id: Physiographic region ID
+        phy_id: int ::  Physio Id for the region to be processed.
     """
     workspace = config.workspace
     shp = config.naipqq_shp
@@ -134,185 +114,13 @@ def ARVI(phy_id):
             naip.ARVI(paths[i], outputs[i])
 
 
-def prepare_training_data(field='id'):
-    """
-    This function converts the training data shapefile into a raster to allow
-    the training data to be applied for classification
-    ---
-    Args:
-        vector:
-        ref_raster:
-        out_raster:
-        field:
-    """
-    # TODO: Allow for training data to have 0 and 1 as values
-
-    vector = config.training_shp
-    ref_raster = config.reference_raster
-    out_raster = config.training_raster
-
-    snap = gdal.Open(ref_raster)
-    shp = ogr.Open(vector)
-    layer = shp.GetLayer()
-
-    xy = snap.GetRasterBand(1).ReadAsArray().astype(np.float32).shape
-
-    driver = gdal.GetDriverByName('GTiff')
-    metadata = driver.GetMetadata()
-    dst_ds = driver.Create(out_raster,
-                           xsize=xy[1],
-                           ysize=xy[0],
-                           bands=1,
-                           eType=gdal.GDT_Byte)
-    proj = snap.GetProjection()
-    geo = snap.GetGeoTransform()
-    dst_ds.SetGeoTransform(geo)
-    dst_ds.SetProjection(proj)
-    if field is None:
-        gdal.RasterizeLayer(dst_ds, [1], layer, None)
-    else:
-        OPTIONS = ['ATTRIBUTE=' + field]
-        gdal.RasterizeLayer(dst_ds, [1], layer, None, options=OPTIONS)
-    dst_ds.FlushCache()
-    dst_ds = None
-
-    print('Vector to raster complete.')
-    return out_raster
-
-
-# ==============================================================================
-# Classification Functions:
-# -------------------------
-#       -- split_data(training_raster, training_fit_raster)
-#       -- tune_hyperparameter(training_raster, training_fit_raster)
-#       Random Forests:
-#       -- random_forests_class(training_raster, training_fit_raster, in_raster,
-#                               out_tiff, smoothing=True)
-#       -- batch_random_forests(in_directory, training_raster, fit_raster,
-#                               out_directory, smoothing=True)
-#       Extra Trees:
-#       -- extra_trees_class(training_raster, training_fit_raster, in_raster,
-#                            out_tiff, smoothing=True):
-#       -- batch_extra_trees(in_directory, training_raster, fit_raster,
-#                            out_directory, smoothing=True):
-# ==============================================================================
-
-
-def split_data(training_raster, training_fit_raster):
-
-    y_raster = gdal.Open(training_raster)
-    t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
-    x_raster = gdal.Open(training_fit_raster)
-    n = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
-    y = t[t > 0]
-    X = n[t > 0]
-    X = X.reshape(-1, 1)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size =
-    0.33)
-
-    return X_train, X_test, y_train, y_test
-
-
-def tune_hyperparameter(training_raster, training_fit_raster):
-
-    y_raster = gdal.Open(training_raster)
-    t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
-    x_raster = gdal.Open(training_fit_raster)
-    n = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
-    y = t[t > 0]
-    X = n[t > 0]
-    X = X.reshape(-1, 1)
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size =
-    0.33)
-
-    n_estimators = [int(x) for x in np.linspace(start=10, stop=150, num=10)]
-    min_samples_leaf = [int(x) for x in np.linspace(start=5, stop=500, num=10)]
-    random_grid = {
-        'n_estimators': n_estimators,
-        'min_samples_leaf': min_samples_leaf
-    }
-    etc = ExtraTreesClassifier(n_jobs=-1, max_features=None)
-    clf = RandomizedSearchCV(etc, random_grid, random_state=0, verbose=3)
-    clf.fit(X_train, y_train)
-
-    print(clf.best_params_)
-    return clf.cv_results_
-
-
-def extra_trees_class(training_raster, training_fit_raster, in_raster,
-                      out_tiff, smoothing=True):
-    """
-    This function enables classification of NAIP imagery using a sklearn Random
-    Forests supervised classification algorithm.
-    ---
-    Args:
-        training_fit_raster:
-        training_raster: Rasterized training data
-        in_raster: Raster training raster will be applied to
-        out_tiff: Final output classified raster
-        smoothing: True :: applies median filter to output classified raster
-    """
-    y_raster = gdal.Open(training_raster)
-    t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
-    x_raster = gdal.Open(training_fit_raster)
-    n = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
-    y = t[t > 0]
-    X = n[t > 0]
-    X = X.reshape(-1, 1)
-    clf = ExtraTreesClassifier(n_estimators=100, n_jobs=-1,
-                               max_features=None,
-                               min_samples_leaf=10, class_weight={1: 2, 2: 0.5})
-    ras = clf.fit(X, y)
-    r = gdal.Open(in_raster)
-    class_raster = r.GetRasterBand(1).ReadAsArray().astype(np.float32)
-    class_array = class_raster.reshape(-1, 1)
-    ras_pre = ras.predict(class_array)
-    ras_final = ras_pre.reshape(class_raster.shape)
-    ras_byte = ras_final.astype(dtype=np.byte)
-    if smoothing:
-        smooth_ras = ndimage.median_filter(ras_byte, size=5)
-        driver = gdal.GetDriverByName('GTiff')
-        metadata = driver.GetMetadata()
-        shape = class_raster.shape
-        dst_ds = driver.Create(out_tiff,
-                               xsize=shape[1],
-                               ysize=shape[0],
-                               bands=1,
-                               eType=gdal.GDT_Byte)
-        proj = r.GetProjection()
-        geo = r.GetGeoTransform()
-        dst_ds.SetGeoTransform(geo)
-        dst_ds.SetProjection(proj)
-        dst_ds.GetRasterBand(1).WriteArray(smooth_ras)
-        dst_ds.FlushCache()
-        dst_ds = None
-    if not smoothing:
-        driver = gdal.GetDriverByName('GTiff')
-        metadata = driver.GetMetadata()
-        shape = class_raster.shape
-        dst_ds = driver.Create(out_tiff,
-                               xsize=shape[1],
-                               ysize=shape[0],
-                               bands=1,
-                               eType=gdal.GDT_Byte)
-        proj = r.GetProjection()
-        geo = r.GetGeoTransform()
-        dst_ds.SetGeoTransform(geo)
-        dst_ds.SetProjection(proj)
-        dst_ds.GetRasterBand(1).WriteArray(ras_byte)
-        dst_ds.FlushCache()
-        dst_ds = None
-
-    print(out_tiff)
-
-
 def batch_extra_trees(phy_id, smoothing=True):
     """
     This function enables batch classification of NAIP imagery using a
     sklearn Extra Trees supervised classification algorithm.
     ---
     Args:
+        phy_id: int ::  Physio Id for the region to be processed.
 
     """
 
@@ -431,6 +239,13 @@ def batch_extra_trees(phy_id, smoothing=True):
 
 
 def clip_reproject_classified_tiles(phy_id):
+    """
+    This fucntion clips and reprojects all classified to their respective
+    seamlines and the desired projection
+
+    Args:
+        phy_id: int ::  Physio Id for the region to be processed.
+    """
 
     workspace = config.workspace
     shp = config.naipqq_shp
@@ -557,6 +372,11 @@ def clip_mosaic(phy_id):
 
 
 def create_canopy_dataset(phy_id):
+    """
+    This function is a wrapper function run every step to make a canopy dataset.
+    Args:
+        phy_id: int ::  Physio Id for the region to be processed.
+    """
     ARVI(phy_id)
     batch_extra_trees(phy_id)
     clip_reproject_classified_tiles(phy_id)

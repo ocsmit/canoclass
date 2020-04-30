@@ -23,14 +23,28 @@ process our data and no true method to tweak it to suit our needs.
 - GDAL 
 - NumPy
 - Scikit-learn
+- Rindcalc
 
-## Index functions
+## Proccess & Setting up the NAIP QQ shapefile
+All functions created for the process work by reading filenames and
+ physiographic ids from the NAIP QQ shapefile. However, the NAIP QQ file does 
+ not contain the physio id’s without additional processing. To enable each 
+ region to be queried within the NAIP QQ shapefile the “Join Attributes by 
+ Location” tool within QGIS 3.10 is used to join the physiographic district 
+ shapefile attributes to the NAIP QQ shapefile. The join performed is a ‘one 
+ for many join’ for all NAIP QQ’s either within or intersecting a physiographic 
+ district. The ‘one for many join’ is important as one NAIP QQ could potentially
+be within multiple districts, so a new polygon feature needs to be created
+with each physio id. The spatial join method will allow for the physiographic
+districts and their corresponding files to be queried directly using OGR, 
+GDAL’s vector processing API. The joined NAIP QQ is saved as a new shapefile.
 
-**ARVI: ~ NIR based index | Main Focus** 
- 
-## Classification 
+The original unjoined NAIP QQ shapefile is still used however, as GDAL is not
+ able to properly read the required geometry required for clipping of each QQ
+ feature due to the ‘one for many join’. The original shapefile will
+ subsequently be used for clipping the tiles their boundaries after the file
+  names are queried from the joined NAIP QQ shapefile. 
 
-**Extra Trees Classifier** 
 
 ## Full Process
 
@@ -44,5 +58,3 @@ process our data and no true method to tweak it to suit our needs.
   
   **Full data creation process except traing data and optimization run with 
   ``create_canopy_dataset``**
-
-For technical information of each function see [TECHNICAL](TECHNICAL.md)
