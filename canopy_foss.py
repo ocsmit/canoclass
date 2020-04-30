@@ -251,6 +251,7 @@ def clip_reproject_classified_tiles(phy_id):
     shp = config.naipqq_shp
     clip_shp = config.clip_naip
     results_dir = config.results
+    proj = config.proj
 
     region = get_phyregs_name(phy_id)
     print(region)
@@ -290,7 +291,7 @@ def clip_reproject_classified_tiles(phy_id):
         in_path = '%s/%s' % (in_dir, filename)
         out_file = '%s/%s%s' % (out_dir, 'cl_', filename)
         where = "FileName = '%s'" % filtered[i]
-        result = gdal.Warp(out_file, in_path, dstNodata=3, dstSRS='EPSG:5070',
+        result = gdal.Warp(out_file, in_path, dstNodata=3, dstSRS=proj,
                            xRes=1, yRes=1, cutlineDSName=clip_shp,
                            cutlineWhere=where,
                            cropToCutline=True, outputType=gdal.GDT_Byte,
@@ -311,6 +312,7 @@ def mosaic_tiles(phy_id):
     shp = config.naipqq_shp
     naip_dir = config.naip_dir
     results_dir = config.results
+    proj = config.proj
 
     region = get_phyregs_name(phy_id)
     print(region)
@@ -368,7 +370,7 @@ def clip_mosaic(phy_id):
                      cutlineWhere=where, cropToCutline=True,
                      srcNodata='3', dstNodata='3',
                      outputType=gdal.GDT_Byte, creationOptions=["NBITS=2"],
-                     dstSRS='EPSG:5070' )
+                     dstSRS=proj)
 
 
 def create_canopy_dataset(phy_id):

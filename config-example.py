@@ -1,3 +1,15 @@
+# ==============================================================================
+# Title: config.py
+# Author: Owen Smith, University of North Georgia
+# Canopy data creation config:
+# -----------------------------
+#       * All proccess functions rely on the configurations set within this
+#         file to run.
+#
+# ==============================================================================
+
+# Output projection
+proj = 'EPSG:5070'
 
 # Folder where process will output results and read data from
 workspace = '/mnt/Research/GFC_FOSS'
