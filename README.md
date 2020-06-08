@@ -7,6 +7,8 @@ research to the [CanoPy](https://github.com/HuidaeCho/canopy) module created
 for the Georgia Canopy Analysis 2009 project sponsored by the Georgia Forestry
 Commission
 
+**[Sample Data and instructions](https://ungprod-my.sharepoint.com/:u:/g/personal/ocsmit7654_ung_edu/EX-DpRXnHspCpj6OXG5ZPtQB2uBgLb9XcJTcOZY6_H2h5w?e=B1TPc9)**
+
 ## Overview
 
 `canopy_foss` is a python module created to process large amounts of NAIP
