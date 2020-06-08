@@ -19,7 +19,7 @@ from osgeo import gdal, ogr
 import numpy as np
 from scipy import ndimage
 from sklearn.ensemble import ExtraTreesClassifier
-from sklearn.model_selection import RandomizedSearchCV, train_test_split
+from sklearn.model_selection import RandomizedSearchCV, train_test_split, cross_val_score
 from rindcalc import naip
 
 
@@ -127,7 +127,7 @@ def tune_hyperparameter(training_raster, training_fit_raster):
     min_samples_leaf = [int(x) for x in np.linspace(start=5, stop=500, num=10)]
     random_grid = {
         'n_estimators': n_estimators,
-        'min_samples_leaf': min_samples_leaf
+        # 'min_samples_leaf': min_samples_leaf
     }
     etc = ExtraTreesClassifier(n_jobs=-1, max_features=None)
     clf = RandomizedSearchCV(etc, random_grid, random_state=0, verbose=3)
@@ -160,6 +160,8 @@ def extra_trees_class(training_raster, training_fit_raster, in_raster,
     clf = ExtraTreesClassifier(n_estimators=100, n_jobs=-1,
                                max_features=None,
                                min_samples_leaf=10, class_weight={1: 2, 2: 0.5})
+    scores = cross_val_score(clf, X, y, cv=5)
+    print(scores)
     ras = clf.fit(X, y)
     r = gdal.Open(in_raster)
     class_raster = r.GetRasterBand(1).ReadAsArray().astype(np.float32)
