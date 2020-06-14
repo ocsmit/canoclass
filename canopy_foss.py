@@ -40,7 +40,7 @@ def get_phyregs_name(phy_id):
     return name
 
 
-def ARVI(phy_id):
+def batch_veg_index(phy_id, index='ARVI'):
     """
     This function walks through the input NAIP directory and performs the
     ARVI calculation on each naip geotiff file and saves each new ARVI
@@ -111,7 +111,7 @@ def ARVI(phy_id):
             print('Missing file: ', paths[i])
             continue
         if os.path.exists(paths[i]):
-            naip.ARVI(paths[i], outputs[i])
+            i = getattr(naip, index)(paths[i], outputs[i])
 
 
 def batch_extra_trees(phy_id, smoothing=True):
