@@ -28,6 +28,7 @@ from scipy import ndimage
 from sklearn.ensemble import ExtraTreesClassifier
 from rindcalc import naip
 
+
 def get_phyregs_name(phy_id):
     shp = config.phyreg_lyr
     src = ogr.Open(shp)
@@ -40,7 +41,7 @@ def get_phyregs_name(phy_id):
     return name
 
 
-def batch_veg_index(phy_id, index='ARVI'):
+def batchIndex(pid, index='ARVI'):
     """
     This function walks through the input NAIP directory and performs the
     ARVI calculation on each naip geotiff file and saves each new ARVI
@@ -49,17 +50,14 @@ def batch_veg_index(phy_id, index='ARVI'):
     Args:
         phy_id: int ::  Physio Id for the region to be processed.
     """
-    workspace = config.workspace
     shp = config.naipqq_shp
     naip_dir = config.naip_dir
     results_dir = config.results
+    id_field = config.procid_field
 
     if not os.path.exists(naip_dir):
         print('NAIP directory not found')
-    # Get region name and create output file path
-    region = get_phyregs_name(phy_id)
-    print(region)
-    region_dir = '%s/%s' % (results_dir, region)
+    region_dir = '%s/%s' % (results_dir, str(pid))
     out_dir = '%s/Inputs' % region_dir
     if not os.path.exists(results_dir):
         os.mkdir(results_dir)
@@ -79,14 +77,14 @@ def batch_veg_index(phy_id, index='ARVI'):
     phyregs = []
     filtered = []
     paths = []
-    query = '%d' % phy_id
+    query = '%d' % pid
     outputs = []
     # Query is done by iterating over list of entire naip_qq shapefile.
     # ogr.SetAttributeFilter throws SQL expression error due to needed commas
     # around phy_id.
     for i in lyr:
         FileName.append(i.GetField('FileName'))
-        phyregs.append(str(i.GetField('PHYSIO_ID')))
+        phyregs.append(str(i.GetField(id_field)))
     # Get raw file names from naip_qq layer by iterating over phyregs list and
     # retreving corresponding file name from filenames list.
     for j in range(len(phyregs)):
@@ -114,7 +112,7 @@ def batch_veg_index(phy_id, index='ARVI'):
             i = getattr(naip, index)(paths[i], outputs[i])
 
 
-def batch_extra_trees(phy_id, smoothing=True):
+def batch_extra_trees(pid, smoothing=True):
     """
     This function enables batch classification of NAIP imagery using a
     sklearn Extra Trees supervised classification algorithm.
@@ -124,16 +122,14 @@ def batch_extra_trees(phy_id, smoothing=True):
 
     """
 
-    workspace = config.workspace
     shp = config.naipqq_shp
     results_dir = config.results
     training_raster = config.training_raster
     fit_raster = config.training_fit_raster
+    id_field = config.procid_field
 
     # Query region name, create input and output folder paths
-    region = get_phyregs_name(phy_id)
-    print(region)
-    region_dir = '%s/%s' % (results_dir, region)
+    region_dir = '%s/%s' % (results_dir, pid)
     in_dir = '%s/Inputs' % region_dir
     out_dir = '%s/Outputs' % region_dir
     if not os.path.exists(in_dir):
@@ -141,7 +137,7 @@ def batch_extra_trees(phy_id, smoothing=True):
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
 
-    # Read training raster and corresponding raster file and shape to be trained
+    # Read training & fit raster file and shape to be trained
     y_raster = gdal.Open(training_raster)
     t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
     x_raster = gdal.Open(fit_raster)
@@ -156,25 +152,26 @@ def batch_extra_trees(phy_id, smoothing=True):
     ras = clf.fit(X, y)
 
     # Open naip_qq shapefile and iterate over attributes to select naip tiles
-    # in desired phy_id.
+    # in desired pid.
     src = ogr.Open(shp)
     lyr = src.GetLayer()
     FileName = []
     phyregs = []
     filtered = []
     paths = []
-    query = '%d' % phy_id
+    query = '%d' % pid
     outputs = []
     for i in lyr:
         FileName.append(i.GetField('FileName'))
-        phyregs.append(str(i.GetField('PHYSIO_ID')))
+        phyregs.append(str(i.GetField(id_field)))
     # Get raw file names from naip_qq layer by iterating over phyregs list and
     # retreving corresponding file name from filenames list.
     for j in range(len(phyregs)):
         if query == phyregs[j]:
             filtered.append(FileName[j])
     for i in range(len(filtered)):
-        # Edit filenames to get true file names, and create output filenames and
+        # Edit filenames to get true file names
+        # create output filenames and
         # paths.
         file = '%s%s' % ('arvi_', filtered[i])
         filename = '%s.tif' % file[:-13]
@@ -238,7 +235,7 @@ def batch_extra_trees(phy_id, smoothing=True):
                 dst_ds = None
 
 
-def clip_reproject_classified_tiles(phy_id):
+def clip_reproject_classified_tiles(pid):
     """
     This fucntion clips and reprojects all classified to their respective
     seamlines and the desired projection
@@ -247,15 +244,13 @@ def clip_reproject_classified_tiles(phy_id):
         phy_id: int ::  Physio Id for the region to be processed.
     """
 
-    workspace = config.workspace
     shp = config.naipqq_shp
     clip_shp = config.clip_naip
     results_dir = config.results
     proj = config.proj
+    id_field = config.procid_field
 
-    region = get_phyregs_name(phy_id)
-    print(region)
-    region_dir = '%s/%s' % (results_dir, region)
+    region_dir = '%s/%s' % (results_dir, pid)
     in_dir = '%s/Outputs' % region_dir
     out_dir = '%s/Outputs' % region_dir
     if not os.path.exists(in_dir):
@@ -272,19 +267,18 @@ def clip_reproject_classified_tiles(phy_id):
     FileName = []
     phyregs = []
     filtered = []
-    paths = []
-    query = '%d' % phy_id
-    outputs = []
+    query = '%d' % pid
     for i in lyr:
         FileName.append(i.GetField('FileName'))
-        phyregs.append(str(i.GetField('PHYSIO_ID')))
+        phyregs.append(str(i.GetField(id_field)))
     # Get raw file names from naip_qq layer by iterating over phyregs list and
     # retreving corresponding file name from filenames list.
     for j in range(len(phyregs)):
         if query == phyregs[j]:
             filtered.append(FileName[j])
     for i in range(len(filtered)):
-        # Edit filenames to get true file names, and create output filenames and
+        # Edit filenames to get true file names
+        # , and create output filenames and
         # paths.
         file = '%s%s' % ('c_arvi_', filtered[i])
         filename = '%s.tif' % file[:-13]
@@ -300,7 +294,7 @@ def clip_reproject_classified_tiles(phy_id):
         result = None
 
 
-def mosaic_tiles(phy_id):
+def mosaic_tiles(pid):
     """
     This function mosaics all classified NAIP tiles within a physiographic
     region using gdal_merge.py
@@ -310,36 +304,34 @@ def mosaic_tiles(phy_id):
 
     """
     shp = config.naipqq_shp
-    naip_dir = config.naip_dir
     results_dir = config.results
-    proj = config.proj
+    id_field = config.procid_field
 
-    region = get_phyregs_name(phy_id)
-    print(region)
-    region_dir = '%s/%s' % (results_dir, region)
+    region_dir = '%s/%s' % (results_dir, pid)
     dir_path = '%s/Outputs' % (region_dir)
     src = ogr.Open(shp)
     lyr = src.GetLayer()
     FileName = []
     phyregs = []
     filtered = []
-    query = '%d' % phy_id
+    query = '%d' % pid
     inputs = []
     for i in lyr:
         FileName.append(i.GetField('FileName'))
-        phyregs.append(str(i.GetField('PHYSIO_ID')))
+        phyregs.append(str(i.GetField(id_field)))
     # Get raw file names from naip_qq layer by iterating over phyregs list and
     # retreving corresponding file name from filenames list.
     for j in range(len(phyregs)):
         if query == phyregs[j]:
             filtered.append(FileName[j])
     for i in range(len(filtered)):
-        # Edit filenames to get true file names, and create output filenames and
+        # Edit filenames to get true file names
+        # , and create output filenames and
         # paths.
         file = filtered[i]
         filename = '%s.tif' % file[:-13]
         in_file = '%s/%s%s' % (dir_path, 'cl_c_arvi_', filename)
-        out_file = '%s/%s%s.tif' % (dir_path, 'mosaic_', region)
+        out_file = '%s/%s%s.tif' % (dir_path, 'mosaic_', pid)
         inputs.append(in_file)
         # Check if input file exists
         if not os.path.exists(inputs[i]):
@@ -347,24 +339,24 @@ def mosaic_tiles(phy_id):
             continue
 
     inputs_string = " ".join(inputs)
-    gdal_merge = "gdal_merge.py -co NBITS=2 -n 3 -init 3 -o %s -of gtiff %s" % (
+    gdal_merge = "gdal_merge.py -co NBITS=2 -n 3\
+                 -init 3 -o %s -of gtiff %s" % (
         out_file, inputs_string)
     os.system(gdal_merge)
 
 
-def clip_mosaic(phy_id):
+def clip_mosaic(pid):
     shp = config.phyreg_lyr
     results_dir = config.results
+    proj = config.proj
 
-    region = get_phyregs_name(phy_id)
-    print(region)
-    region_dir = '%s/%s' % (results_dir, region)
+    region_dir = '%s/%s' % (results_dir, pid)
     dir_path = '%s/Outputs' % (region_dir)
-    input_raster_name = 'mosaic_%s.tif' % region
+    input_raster_name = 'mosaic_%s.tif' % pid
     in_raster = '%s/%s' % (dir_path, input_raster_name)
     out_raster = '%s/clipped_%s' % (dir_path, input_raster_name)
 
-    where = "PHYSIO_ID = %d" % phy_id
+    where = "PHYSIO_ID = %d" % pid
 
     warp = gdal.Warp(out_raster, in_raster, xRes=1, yRes=1, cutlineDSName=shp,
                      cutlineWhere=where, cropToCutline=True,
@@ -373,15 +365,15 @@ def clip_mosaic(phy_id):
                      dstSRS=proj)
 
 
-def create_canopy_dataset(phy_id):
+def create_canopy_dataset(pid):
     """
     This function is a wrapper function run every step to make a canopy dataset.
     Args:
         phy_id: int ::  Physio Id for the region to be processed.
     """
-    ARVI(phy_id)
-    batch_extra_trees(phy_id)
-    clip_reproject_classified_tiles(phy_id)
-    mosaic_tiles(phy_id)
-    clip_mosaic(phy_id)
+    batchIndex(pid)
+    batch_extra_trees(pid)
+    clip_reproject_classified_tiles(pid)
+    mosaic_tiles(pid)
+    clip_mosaic(pid)
     print('Finished')
