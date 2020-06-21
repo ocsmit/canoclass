@@ -1,6 +1,6 @@
-# **canopy_foss** 
+# **CanoClass** 
 
-[CanoPy FOSS page](https://gislab.isnew.info/open_source_canopy_classification)
+[CanoClass page](https://gislab.isnew.info/open_source_canopy_classification)
 
 A work in progress open source canopy and deforestation monitoring. Parallel
 research to the [CanoPy](https://github.com/HuidaeCho/canopy) module created
@@ -11,7 +11,7 @@ Commission
 
 ## Overview
 
-`canopy_foss` is a python module created to process large amounts of NAIP
+`CanoClass` is a python module created to process large amounts of NAIP
 imagery and create accurate canopy classifications in an open source
 framework. Need for an open source classification system arose during the
 creation of the Georgia canopy dataset as tools that were being used
