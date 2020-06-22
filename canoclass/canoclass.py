@@ -2,6 +2,12 @@
 # Canoclass.py
 ###############################################################################
 
+from osgeo import gdal, ogr
+import numpy as np
+from scipy import ndimage
+from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.model_selection import RandomizedSearchCV, train_test_split, cross_val_score
+
 
 def prepare_training_data(input_shp, reference_raster, out_raster, field='id'):
     """
