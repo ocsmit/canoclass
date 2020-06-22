@@ -1,6 +1,43 @@
-###############################################################################
-# Canoclass.py
-###############################################################################
+# ==============================================================================
+# Title: training.py
+# Author: Owen Smith, University of North Georgia
+# Preprocessing Functions:
+# ------------------------
+#       Index Calculation:
+#       -- ARVI(input_naip, out_naip)
+#
+#       Training Data Prep:
+#       -- prepare_training_data(vector, ref_raster, out_raster, field='id')
+#       -- split_data(training_raster, training_fit_raster)
+#       -- tune_hyperparameter(training_raster, training_fit_raster)
+#       -- extra_trees_class(training_raster, training_fit_raster, in_raster,
+#                            out_tiff, smoothing=True)
+# ==============================================================================
+
+import os
+from osgeo import gdal, ogr
+import numpy as np
+from scipy import ndimage
+from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.model_selection import RandomizedSearchCV, train_test_split, cross_val_score
+from rindcalc import naip
+
+
+def veg_index(input_naip, out_naip, index='ARVI'):
+    """
+    Wrapper function to create the desired vegetation index for training using
+    rindcalc.
+    Args:
+        input_naip: Input NAIP tile
+        out_naip: Output ARVI index raster
+        index: Which vegatation index to create
+    """
+    if not os.path.exists(input_naip):
+        raise IOError('Path not found.')
+    if os.path.exists(input_naip):
+        i = getattr(naip, index)(input_naip, out_naip)
+
+    print('Finished')
 
 
 def prepare_training_data(input_shp, reference_raster, out_raster, field='id'):
