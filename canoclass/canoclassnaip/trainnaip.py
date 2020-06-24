@@ -40,7 +40,7 @@ def veg_index(input_naip, out_naip, index='ARVI'):
     print('Finished')
 
 
-def prepare_training_data(input_shp, reference_raster, out_raster, field='id'):
+def naip_prepare_training_data(input_shp, reference_raster, out_raster, field='id'):
     """
     This function converts the training data shapefile into a raster to allow
     the training data to be applied for classification
@@ -139,7 +139,7 @@ def tune_hyperparameter(training_raster, training_fit_raster):
     return clf.cv_results_
 
 
-def extra_trees_class(training_raster, training_fit_raster, in_raster,
+def naip_extra_trees_class(training_raster, training_fit_raster, in_raster,
                       out_tiff, smoothing=True):
     """
     This function enables classification of NAIP imagery using a sklearn Random

@@ -122,26 +122,33 @@ def extra_trees_class(training_raster, training_fit_raster, in_raster,
         smoothing: True :: applies median filter to output classified raster
     """
     y_raster = gdal.Open(training_raster)
-    t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
+    t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float64)
     x_raster = gdal.Open(training_fit_raster)
-    n = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
+    n = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float64)
+    n[np.isnan(n)] = 0
+    n_mask = np.ma.MaskedArray(n, mask=(n == 0))
+    n_mask.reshape(n.shape)
     y = t[t > 0]
-    X = n[t > 0]
+    X = n_mask[t > 0]
     X = X.reshape(-1, 1)
-    clf = ExtraTreesClassifier(n_estimators=100, n_jobs=-1,
+    clf = ExtraTreesClassifier(n_estimators=42, n_jobs=-1,
                                max_features=None,
-                               min_samples_leaf=10, class_weight={1: 2, 2: 0.5})
+                               min_samples_leaf=5, class_weight={1: 2, 2: 0.5})
     scores = cross_val_score(clf, X, y, cv=5)
     print(scores)
     ras = clf.fit(X, y)
     r = gdal.Open(in_raster)
-    class_raster = r.GetRasterBand(1).ReadAsArray().astype(np.float32)
-    class_array = class_raster.reshape(-1, 1)
+    class_raster = r.GetRasterBand(1).ReadAsArray().astype(np.float64)
+    class_raster[np.isnan(class_raster)] = 0
+    class_mask = np.ma.MaskedArray(class_raster, mask=(class_raster == 0))
+    class_mask.reshape(class_raster.shape)
+    class_array = class_mask.reshape(-1, 1)
+
     ras_pre = ras.predict(class_array)
     ras_final = ras_pre.reshape(class_raster.shape)
     ras_byte = ras_final.astype(dtype=np.byte)
     if smoothing:
-        smooth_ras = ndimage.median_filter(ras_byte, size=5)
+        smooth_ras = ndimage.median_filter(ras_byte, size=3)
         driver = gdal.GetDriverByName('GTiff')
         metadata = driver.GetMetadata()
         shape = class_raster.shape

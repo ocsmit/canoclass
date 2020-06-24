@@ -223,7 +223,7 @@ def batch_extra_trees(pid, smoothing=True):
                 dst_ds = None
 
 
-def clip_reproject_classified_tiles(pid):
+def batch_clip_reproject_classified_tiles(pid):
     """
     This fucntion clips and reprojects all classified to their respective
     seamlines and the desired projection
@@ -282,7 +282,7 @@ def clip_reproject_classified_tiles(pid):
         result = None
 
 
-def mosaic_tiles(pid):
+def batch_mosaic_tiles(pid):
     """
     This function mosaics all classified NAIP tiles within a physiographic
     region using gdal_merge.py
