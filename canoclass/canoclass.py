@@ -9,107 +9,8 @@ from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.model_selection import RandomizedSearchCV, train_test_split, cross_val_score
 
 
-def prepare_training_data(input_shp, reference_raster, out_raster, field='id'):
-    """
-    This function converts the training data shapefile into a raster to allow
-    the training data to be applied for classification
-    ---
-    Args:
-        input_shp: Input shapefile to rasterize
-        reference_raster: Raster which shapefile was drawn over
-        out_raster: Output training raster
-        field: Field to rasterize
-    """
-    # TODO: Allow for training data to have 0 and 1 as values
-
-    snap = gdal.Open(reference_raster)
-    shp = ogr.Open(input_shp)
-    layer = shp.GetLayer()
-
-    xy = snap.GetRasterBand(1).ReadAsArray().astype(np.float32).shape
-
-    driver = gdal.GetDriverByName('GTiff')
-    metadata = driver.GetMetadata()
-    dst_ds = driver.Create(out_raster,
-                           xsize=xy[1],
-                           ysize=xy[0],
-                           bands=1,
-                           eType=gdal.GDT_Byte)
-    proj = snap.GetProjection()
-    geo = snap.GetGeoTransform()
-    dst_ds.SetGeoTransform(geo)
-    dst_ds.SetProjection(proj)
-    if field is None:
-        gdal.RasterizeLayer(dst_ds, [1], layer, None)
-    else:
-        OPTIONS = ['ATTRIBUTE=' + field]
-        gdal.RasterizeLayer(dst_ds, [1], layer, None, options=OPTIONS)
-    dst_ds.FlushCache()
-    dst_ds = None
-
-    print('Vector to raster complete.')
-    return out_raster
-
-
-def split_data(training_raster, training_fit_raster):
-    """
-    Split data into training and testing data
-
-    Args:
-        training_raster: Rasterized training data
-        training_fit_raster: Raster which data is drawn over
-
-    """
-
-    y_raster = gdal.Open(training_raster)
-    t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
-    x_raster = gdal.Open(training_fit_raster)
-    n = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
-    y = t[t > 0]
-    X = n[t > 0]
-    X = X.reshape(-1, 1)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33)
-
-    return X_train, X_test, y_train, y_test
-
-
-def tune_hyperparameter(training_raster, training_fit_raster):
-    """
-    Performs 5 fold cross validation to determine optimal parameters
-
-    Args:
-        training_raster: Rasterized training data
-        training_fit_raster: Raster which data is drawn over
-
-    """
-
-    y_raster = gdal.Open(training_raster)
-    t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
-    x_raster = gdal.Open(training_fit_raster)
-    n = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
-    y = t[t > 0]
-    X = n[t > 0]
-    X = X.reshape(-1, 1)
-
-    X_train, X_test, y_train, y_test = split_data(training_raster,
-                                                  training_fit_raster)
-
-    n_estimators = [int(x) for x in np.linspace(start=10, stop=150, num=10)]
-    min_samples_leaf = [int(x) for x in np.linspace(start=5, stop=500, num=10)]
-    random_grid = {
-        'n_estimators': n_estimators,
-        # 'min_samples_leaf': min_samples_leaf
-    }
-    etc = ExtraTreesClassifier(n_jobs=-1, max_features=None)
-    clf = RandomizedSearchCV(etc, random_grid, random_state=0, verbose=3)
-    clf.fit(X_train, y_train)
-
-    print(clf.best_params_)
-    return clf.cv_results_
-
-
 def extra_trees_class(training_raster, training_fit_raster, in_raster,
-                      out_tiff, smoothing=True):
+                      out_tiff, smoothing=True, class_parameters=None):
     """
     This function enables classification of NAIP imagery using a sklearn Random
     Forests supervised classification algorithm.
@@ -131,11 +32,21 @@ def extra_trees_class(training_raster, training_fit_raster, in_raster,
     y = t[t > 0]
     X = n_mask[t > 0]
     X = X.reshape(-1, 1)
-    clf = ExtraTreesClassifier(n_estimators=42, n_jobs=-1,
-                               max_features=None,
-                               min_samples_leaf=5, class_weight={1: 2, 2: 0.5})
-    scores = cross_val_score(clf, X, y, cv=5)
-    print(scores)
+
+    if class_parameters is None:
+        parameters = {"n_estimators": 100, "criterion": 'gini', "max_depth": None,
+                             "min_samples_split": 2, "min_samples_leaf": 1,
+                             "min_weight_fraction_leaf": 0.0, "max_features": 'auto',
+                             "max_leaf_nodes": None, "min_impurity_decrease": 0.0,
+                             "min_impurity_split": None, "bootstrap": False,
+                             "oob_score": False, "n_jobs": None, "random_state": None,
+                             "verbose": 0, "warm_start": False, "class_weight": None,
+                             "ccp_alpha": 0.0, "max_samples": None}
+        clf = ExtraTreesClassifier(**parameters)
+    else:
+        parameters = class_parameters
+        clf = ExtraTreesClassifier(**parameters)
+
     ras = clf.fit(X, y)
     r = gdal.Open(in_raster)
     class_raster = r.GetRasterBand(1).ReadAsArray().astype(np.float64)

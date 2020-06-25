@@ -23,7 +23,7 @@
 import os
 from osgeo import gdal, ogr
 import numpy as np
-import config
+from canoclass.batchnaip import config
 from scipy import ndimage
 from sklearn.ensemble import ExtraTreesClassifier
 from rindcalc import naip

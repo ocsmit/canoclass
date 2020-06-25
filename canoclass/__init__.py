@@ -1,2 +1,2 @@
 from .canoclass import *
-from .canoclassnaip import *
+from .batchnaip import *
