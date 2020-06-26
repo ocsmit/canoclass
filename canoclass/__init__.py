@@ -1,2 +1,2 @@
-from .canoclass import *
+from .classify import *
 from .batchnaip import *
