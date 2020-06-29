@@ -62,7 +62,8 @@ def split_data(training_raster, training_fit_raster):
     return X_train, X_test, y_train, y_test
 
 
-def tune_hyperparameter(training_raster, training_fit_raster):
+def tune(training_raster, training_fit_raster, start=10, step=10,
+                        stop=100):
     """
     Performs 5 fold cross validation to determine optimal parameters
 
@@ -76,18 +77,23 @@ def tune_hyperparameter(training_raster, training_fit_raster):
     t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
     x_raster = gdal.Open(training_fit_raster)
     n = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
+    n[np.isnan(n)] = 0
+    n_mask = n.ma.MaskedArray(n, mask=(n == 0))
+    n_mask.reshape(n.shape)
     y = t[t > 0]
-    X = n[t > 0]
+    X = n_mask[t > 0]
     X = X.reshape(-1, 1)
 
     X_train, X_test, y_train, y_test = split_data(training_raster,
                                                   training_fit_raster)
 
-    n_estimators = [int(x) for x in np.linspace(start=10, stop=150, num=10)]
-    min_samples_leaf = [int(x) for x in np.linspace(start=5, stop=500, num=10)]
+    n_estimators = [int(x) for x in np.linspace(start=start, stop=stop,
+                    num=step)]
+    min_samples_leaf = [int(x) for x in np.linspace(start=start, stop=stop,
+                        num=step)]
     random_grid = {
         'n_estimators': n_estimators,
-        # 'min_samples_leaf': min_samples_leaf
+        'min_samples_leaf': min_samples_leaf
     }
     etc = ExtraTreesClassifier(n_jobs=-1, max_features=None)
     clf = RandomizedSearchCV(etc, random_grid, random_state=0, verbose=3)
@@ -95,3 +101,4 @@ def tune_hyperparameter(training_raster, training_fit_raster):
 
     print(clf.best_params_)
     return clf.cv_results_
+
