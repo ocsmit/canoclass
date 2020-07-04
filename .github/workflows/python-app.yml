@@ -26,3 +26,6 @@ jobs:
           conda-channels: anaconda, conda-forge, rindcalc
       - run: conda --version
       - run: which python
+      - run: conda install gdal
+      - run: conda install scikit-learn
+      - run: conda install -c rindcalc rindcalc
