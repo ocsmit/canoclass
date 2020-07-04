@@ -1,27 +1,3 @@
-# ==============================================================================
-# Title: canopy_foss.py
-# Author: Owen Smith, University of North Georgia
-# Canopy data creation process:
-# -----------------------------
-#       * View readme to see needed data
-#       * Ensure all configuration parameters are set before starting process.
-#       * To create training data and determine paramters for Extra Trees
-#         Classifier, use training.py which contains all preprocessing function-
-#         s.
-#
-#       1. batchIndex(phy_id)
-#       2. batch_extra_trees(phy_id, smoothing=True)
-#       3. clip_reproject_classified_tiles(phy_id)
-#       4. mosaic_tiles(phy_id)
-#       5. clip_mosaic(phy_id)
-#
-#       wrapper function to perform all steps:
-#           * create_canopy_dataset(phy_id)
-#
-# ==============================================================================
-
-
-
 def batch_naip(pid, index, alg, smoothing=True, class_parameters=None):
     """
     This function is a wrapper function run every step to make a canopy dataset.
