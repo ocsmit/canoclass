@@ -2,10 +2,11 @@
 # Canoclass.py
 ###############################################################################
 
-from osgeo import gdal, ogr
+from osgeo import gdal
 import numpy as np
 from scipy import ndimage
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
+from canoclass.utils import load_data
 
 
 def et_class(training_raster, training_fit_raster, in_raster,
@@ -31,16 +32,8 @@ def et_class(training_raster, training_fit_raster, in_raster,
              "verbose": 0, "warm_start": False, "class_weight": None,
              "ccp_alpha": 0.0, "max_samples": None}
     """
-    y_raster = gdal.Open(training_raster)
-    t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float64)
-    x_raster = gdal.Open(training_fit_raster)
-    n = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float64)
-    n[np.isnan(n)] = 0
-    n_mask = np.ma.MaskedArray(n, mask=(n == 0))
-    n_mask.reshape(n.shape)
-    y = t[t > 0]
-    X = n_mask[t > 0]
-    X = X.reshape(-1, 1)
+
+    X, y = load_data(training_raster, training_fit_raster)
 
     if class_parameters is None:
         parameters = {"n_estimators": 100, "criterion": 'gini', "max_depth": None,
@@ -127,16 +120,8 @@ def rf_class(training_raster, training_fit_raster, in_raster,
              "verbose": 0, "warm_start": False, "class_weight": None,
              "ccp_alpha": 0.0, "max_samples": None}
     """
-    y_raster = gdal.Open(training_raster)
-    t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float64)
-    x_raster = gdal.Open(training_fit_raster)
-    n = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float64)
-    n[np.isnan(n)] = 0
-    n_mask = np.ma.MaskedArray(n, mask=(n == 0))
-    n_mask.reshape(n.shape)
-    y = t[t > 0]
-    X = n_mask[t > 0]
-    X = X.reshape(-1, 1)
+
+    X, y = load_data(training_raster, training_fit_raster)
 
     if class_parameters is None:
         parameters = {"n_estimators": 100, "criterion": 'gini', "max_depth": None,
