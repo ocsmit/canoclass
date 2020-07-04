@@ -73,13 +73,8 @@ def split_data(training_raster, training_fit_raster):
 
     """
 
-    y_raster = gdal.Open(training_raster)
-    t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
-    x_raster = gdal.Open(training_fit_raster)
-    n = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
-    y = t[t > 0]
-    X = n[t > 0]
-    X = X.reshape(-1, 1)
+    X, y = load_data(training_raster, training_fit_raster)
+
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33)
 
     return X_train, X_test, y_train, y_test
@@ -95,16 +90,7 @@ def tune(training_raster, training_fit_raster, start=10, step=10, stop=100):
 
     """
 
-    y_raster = gdal.Open(training_raster)
-    t = y_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
-    x_raster = gdal.Open(training_fit_raster)
-    n = x_raster.GetRasterBand(1).ReadAsArray().astype(np.float32)
-    n[np.isnan(n)] = 0
-    n_mask = n.ma.MaskedArray(n, mask=(n == 0))
-    n_mask.reshape(n.shape)
-    y = t[t > 0]
-    X = n_mask[t > 0]
-    X = X.reshape(-1, 1)
+    X, y = load_data(training_raster, training_fit_raster)
 
     X_train, X_test, y_train, y_test = split_data(training_raster,
                                                   training_fit_raster)
@@ -117,7 +103,7 @@ def tune(training_raster, training_fit_raster, start=10, step=10, stop=100):
         'n_estimators': n_estimators,
         'min_samples_leaf': min_samples_leaf
     }
-    etc = ExtraTreesClassifier(n_jobs=-1, max_features=None)
+    etc = ExtraTreesClassifier()
     clf = RandomizedSearchCV(etc, random_grid, random_state=0, verbose=3)
     clf.fit(X_train, y_train)
 
