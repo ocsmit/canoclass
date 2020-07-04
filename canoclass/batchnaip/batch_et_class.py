@@ -3,9 +3,8 @@ from osgeo import gdal, ogr
 import numpy as np
 from canoclass.batchnaip import config
 from scipy import ndimage
-from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
-from rindcalc import naip
-from canoclass.utils import load_data
+from sklearn.ensemble import ExtraTreesClassifier
+from canoclass.load_data import load_data
 
 def batch_et_class(pid, smoothing=True, class_parameters=None):
     """

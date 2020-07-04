@@ -2,10 +2,7 @@ import os
 from osgeo import gdal, ogr
 import numpy as np
 from canoclass.batchnaip import config
-from scipy import ndimage
-from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
 from rindcalc import naip
-from canoclass.utils import load_data
 
 
 def batchIndex(pid, index='ARVI'):
