@@ -1,3 +1,10 @@
+from osgeo import gdal, ogr
+import numpy as np
+from scipy import ndimage
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
+from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
+
+
 def prepare_training_data(input_shp, reference_raster, out_raster, field='id'):
     """
     This function converts the training data shapefile into a raster to allow
@@ -62,8 +69,7 @@ def split_data(training_raster, training_fit_raster):
     return X_train, X_test, y_train, y_test
 
 
-def tune(training_raster, training_fit_raster, start=10, step=10,
-                        stop=100):
+def tune(training_raster, training_fit_raster, start=10, step=10, stop=100):
     """
     Performs 5 fold cross validation to determine optimal parameters
 
@@ -101,4 +107,3 @@ def tune(training_raster, training_fit_raster, start=10, step=10,
 
     print(clf.best_params_)
     return clf.cv_results_
-
