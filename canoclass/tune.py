@@ -1,6 +1,9 @@
 import numpy as np
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.ensemble import ExtraTreesClassifier
+from canoclass.load_data import load_data
+from canoclass.split_data import split_data
+
 
 def tune(training_raster, training_fit_raster, start=10, step=10, stop=100):
     """
