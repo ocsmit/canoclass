@@ -1,4 +1,4 @@
-import os
+﻿import os
 from osgeo import gdal, ogr
 import numpy as np
 from canoclass.batchnaip import config
