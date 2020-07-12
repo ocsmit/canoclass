@@ -1,7 +1,6 @@
 from osgeo import gdal
 from canoclass.batchnaip import config
 
-
 def batch_clip_mosaic(pid):
     shp = config.proc_region
     results_dir = config.results
