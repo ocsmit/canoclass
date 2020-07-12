@@ -1,3 +1,11 @@
+from .batchindex import batchIndex
+from .batch_clip_mosaic import batch_clip_mosaic
+from .batch_mosaic import batch_mosaic
+from .batch_et_class import batch_et_class
+from .batch_rf_class import batch_rf_class
+from .batch_clip_reproj import batch_clip_reproject
+
+
 def batch_naip(pid, index, alg, smoothing=True, class_parameters=None):
     """
     This function is a wrapper function run every step to make a canopy dataset.
@@ -35,8 +43,7 @@ def batch_naip(pid, index, alg, smoothing=True, class_parameters=None):
         batch_et_class(pid, smoothing, class_parameters)
     else:
         print("Enter either 'RF' or 'ET'")
-    batch_et_class(pid)
     batch_clip_reproject(pid)
     batch_mosaic(pid)
-    clip_mosaic(pid)
+    batch_clip_mosaic(pid)
     print('Finished')
