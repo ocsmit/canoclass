@@ -101,8 +101,12 @@ def batch_et_class(pid, smoothing=True, class_parameters=None):
             r = gdal.Open(paths[i])
             class_raster = r.GetRasterBand(1).ReadAsArray().astype(
                 np.float32)
-            class_array = class_raster.reshape(-1, 1)
-            # Apply classification
+
+            class_raster[np.isnan(class_raster)] = 0
+            class_mask = np.ma.MaskedArray(class_raster, mask=(class_raster == 0))
+            class_mask.reshape(class_raster.shape)
+            class_array = class_mask.reshape(-1, 1)
+
             ras_pre = ras.predict(class_array)
             # Convert back to original shape and make data type Byte
             ras_final = ras_pre.reshape(class_raster.shape)
