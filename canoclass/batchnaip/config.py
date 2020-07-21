@@ -15,14 +15,14 @@ proj = 'EPSG:5070'
 workspace = '/mnt/Research/GFC_FOSS'
 
 # Folder that contains all NAIP
-naip_dir = '/input/path/to/naip/directory'
+naip_dir = '/mnt/Research/GFC/GFC 2015/2015 NAIP/ga'
 
 # Folder where all regions will be output
 results = '%s/Results' % workspace
 
 # Folder within region folders that will contain final outputs after
 # classification
-class_directory = '%s/%%s/outputs' % workspace
+class_directory = '%s/%%s/Outputs' % workspace
 
 # Folder where all refernce and training data is stored.
 data = '%s/Data' % workspace
@@ -31,17 +31,17 @@ data = '%s/Data' % workspace
 proc_region = '%s/Physiographic_Districts_GA.shp' % data
 
 # Field with proccesing region ID's
-procid_field = "ID"
+procid_field = "PHYSIO_ID"
 
 # Original NAIP QQ shapefile to use for clipping
-clip_naip = '%s/ga_naipqq.shp' % data
+clip_naip = '%s/ga_naip_clip.shp' % data
 
 # Joined NAIP QQ tile with process region ID's to query filenames
-naipqq_shp = '%s/process_region.shp' % data
+naipqq_shp = '%s/ga_naip_re_test.shp' % data
 
 # Rasterized training data
-training_raster = '%s/training_raster.tif' % data
+training_raster = '%s/training_raster_2.tif' % data
 
 # ARVI raster which training data applies to
-training_fit_raster = '%s/.tif' % data
+training_fit_raster = '%s/arvi_m_3408326_ne_17_1_20150915.tif' % data
 
