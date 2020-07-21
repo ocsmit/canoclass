@@ -13,19 +13,22 @@ few years. Additionally need for open source arose out of the lack of
 insight to the algorithms that were being used by the software to
 process our data and no true method to tweak it to suit our needs.
 
-At its core CanoClass is optimized to work to solve canopy classification problems.
+At its core CanoClass is optimized to to solve canopy classification problems.
+It is designed to be data agnostic with batch processing functions created to work with NAIP imagery, as scalable processing for NAIP imagery is necessary. 
 
 
 
-## Dependencies
+### Dependencies
 
 - GDAL 
 - NumPy
 - Scikit-learn
 - Rindcalc
 
+### Example
+
+![NAIP_CANOCLASS](https://user-images.githubusercontent.com/55674113/88116578-d8b4b880-cb86-11ea-8a3b-7dd43bf5a0d0.png) 
 
 ![ET_CANOCLASS](https://user-images.githubusercontent.com/55674113/88116531-be7ada80-cb86-11ea-85fb-a2c9777142a7.png)
 
-![NAIP_CANOCLASS](https://user-images.githubusercontent.com/55674113/88116578-d8b4b880-cb86-11ea-8a3b-7dd43bf5a0d0.png)
 
