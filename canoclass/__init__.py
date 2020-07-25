@@ -7,4 +7,4 @@ from .index import index
 from .tune import tune
 from .cross_val import cross_val
 from .mask_roi import mask_roi
-import canoclass.batchnaip
+from .batchnaip import Batch
