@@ -6,10 +6,15 @@ def index(input_naip, out_naip, index='ARVI'):
     """
     Wrapper function to create the desired vegetation index for training using
     rindcalc. Use for NAIP only, for other imagery directly use Rindcalc.
-    Args:
-        input_naip: Input NAIP tile
-        out_naip: Output ARVI index raster
-        index: Which vegatation index to create
+
+    Parameters
+    ----------
+        input_naip: str, filepath
+            Input NAIP tile
+        out_naip: str, filepath
+            Output ARVI index raster
+        index : str
+            Which vegatation index to create
     """
     if not os.path.exists(input_naip):
         raise IOError('Path not found.')

@@ -6,14 +6,18 @@ def rasterize_train_data(input_shp, reference_raster, out_raster, field='id'):
     """
     This function converts the training data shapefile into a raster to allow
     the training data to be applied for classification
-    ---
-    Args:
-        input_shp: Input shapefile to rasterize
-        reference_raster: Raster which shapefile was drawn over
-        out_raster: Output training raster
-        field: Field to rasterize
+
+    Parameters
+    ----------
+        input_shp : str, filepath
+            Input shapefile to rasterize
+        reference_raster : str, filepath
+            Raster which shapefile was drawn over
+        out_raster : str, filepath
+            Output training raster
+        field : str
+            Field to rasterize
     """
-    # TODO: Allow for training data to have 0 and 1 as values
 
     snap = gdal.Open(reference_raster)
     shp = ogr.Open(input_shp)

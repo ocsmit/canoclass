@@ -6,10 +6,18 @@ def split_data(training_raster, training_fit_raster):
     """
     Split data into training and testing data
 
-    Args:
-        training_raster: Rasterized training data
-        training_fit_raster: Raster which data is drawn over
+    Parameters
+    ----------
+        training_raster : str, filename
+            The rasterized training data.
+        training_fit_raster : str, filename
+            The vegetation index raster that the rasterized
+            training data will be fit with.
 
+    Returns
+    -------
+        X_train, X_test, y_train, y_test: array
+            Split training and test datasets
     """
 
     X, y = load_data(training_raster, training_fit_raster)
