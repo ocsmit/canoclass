@@ -6,8 +6,12 @@ CanoClass is a Python module created to process large amounts of NAIP imagery an
 At its core CanoClass is optimized to to solve canopy classification problems. It is designed to be data agnostic with batch processing functions created to work with NAIP imagery, as scalable processing for NAIP imagery is necessary.
 
 
+*Example NAIP*
+
 .. image:: https://user-images.githubusercontent.com/55674113/88116578-d8b4b880-cb86-11ea-8a3b-7dd43bf5a0d0.png
    :alt: CanoClass input
+
+*Example Output*
 
 .. image:: https://user-images.githubusercontent.com/55674113/88116531-be7ada80-cb86-11ea-85fb-a2c9777142a7.png
    :alt: CanoClass Output
