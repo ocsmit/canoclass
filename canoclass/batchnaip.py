@@ -19,9 +19,42 @@ from canoclass.load_data import load_data
 class Batch:
 
     def __init__(self, workspace, naip_dir,
-                   roi_shp, roi_id,
-                   naipqq_clip, naipqq_query, training_raster,
-                   training_fit_raster, projection):
+                 roi_shp, roi_id,
+                 naipqq_clip, naipqq_query, training_raster,
+                 training_fit_raster, projection):
+
+        """
+        Intialize the configuration for batch NAIP processing.
+
+        Parameters
+        ----------
+
+            workspace : str, path
+                Path wherein all data is contained will be read from
+                and output into. The Data folder containing all input and
+                reference data is contained within the workspace folder.
+            naip_dir : str, path
+                Path to directory where NAIP imagery is contained.
+            roi_shp : str, filename
+                The region of interest shapefile.
+            roi_id : str
+                The field from which to query the ROI.
+            naipqq_clip : str, filename
+                The original NAIP QQ shapfile that will allow NAIP
+                tiles to be clipped to their QQ extent.
+            naipqq_query : str, filename
+                The NAIP QQ shapefile joined with the ROI shapefile.
+                The roi_id will be queried against this shapefile to know which
+                NAIP tiles to process.
+            training_raster : str, filename
+                The rasterized training data.
+            training_fit_raster : str, filename
+                The vegetation index raster that the rasterized
+                training data will be fit with.
+            projection : str
+                The final projection the data will be in. Must follow
+                GDAL formating. eg: "EPSG:5070"
+        """
 
         data_dir = "%s/Data" % workspace
         results_dir = "%s/Results" % workspace
@@ -36,7 +69,7 @@ class Batch:
                   "naipqq_query": "%s/%s" % (data_dir, naipqq_query),
                   "training_raster": "%s/%s" % (data_dir, training_raster),
                   "training_fit_raster": "%s/%s" % (data_dir,
-                                                   training_fit_raster),
+                                                    training_fit_raster),
                   "projection": projection}
 
         self.config = config
@@ -44,11 +77,16 @@ class Batch:
     def batch_index(self, pid, index='ARVI'):
         """
         This function walks through the input NAIP directory and performs the
-        ARVI calculation on each naip geotiff file and saves each new ARVI
-        geotiff in the output directory with the prefix 'arvi_'
-        ---
-        Args:
-            phy_id: int ::  Physio Id for the region to be processed.
+        vegetation index calculation on each naip geotiff file and saves each
+        new index geotiff in the output directory.
+
+        Parameters
+        ----------
+
+            phy_id : int
+                roi_id number for the region to be processed.
+            index : str, default="ARVI"
+                Which vegetation index to compute with rindcalc
         """
 
         config = self.config
@@ -117,13 +155,16 @@ class Batch:
     def batch_rf_class(self, pid, smoothing=True, class_parameters=None):
         """
         This function enables batch classification of NAIP imagery using a
-        sklearn Extra Trees supervised classification algorithm.
-        ---
-        Args:
-            phy_id: int ::  Physio Id for the region to be processed.
-            smoothing: True :: applies median filter to output classified raster
-        Keyword Args
-            class_parameters: Dict:: arguments for Scikit-learns ET Classifier
+        sklearn Random Forests supervised classification algorithm.
+
+        Parameters
+        ----------
+            phy_id : int
+                roi_id number for the region to be processed.
+            smoothing : bool, defualt=True
+                Applies a 3x3 median filter to output classified raster.
+            class_parameters : dict
+                arguments for Scikit-learns ET Classifier
                 {"n_estimators": 100, "criterion": 'gini', "max_depth": None,
                  "min_samples_split": 2, "min_samples_leaf": 1,
                  "min_weight_fraction_leaf": 0.0, "max_features": 'auto',
@@ -267,12 +308,15 @@ class Batch:
         """
         This function enables batch classification of NAIP imagery using a
         sklearn Extra Trees supervised classification algorithm.
-        ---
-        Args:
-            phy_id: int ::  Physio Id for the region to be processed.
-            smoothing: True :: applies median filter to output classified raster
-        Keyword Args
-            class_parameters: Dict:: arguments for Scikit-learns ET Classifier
+
+        Parameters
+        ----------
+            phy_id : int
+                roi_id number for the region to be processed.
+            smoothing : bool, defualt=True
+                Applies a 3x3 median filter to output classified raster.
+            class_parameters : dict
+                arguments for Scikit-learns ET Classifier
                 {"n_estimators": 100, "criterion": 'gini', "max_depth": None,
                  "min_samples_split": 2, "min_samples_leaf": 1,
                  "min_weight_fraction_leaf": 0.0, "max_features": 'auto',
@@ -418,8 +462,10 @@ class Batch:
         This fucntion clips and reprojects all classified to their respective
         seamlines and the desired projection
 
-        Args:
-            phy_id: int ::  Physio Id for the region to be processed.
+        Parameters
+        ----------
+            phy_id : int
+                roi_id number for the region to be processed.
         """
 
         config = self.config
@@ -478,8 +524,10 @@ class Batch:
         This function mosaics all classified NAIP tiles within a physiographic
         region using gdal_merge.py
         ---
-        Args:
-            phy_id: int ::  Physio Id for the region to be processed.
+        Parameters
+        ----------
+            phy_id : int
+                roi_id number for the region to be processed.
 
         """
 
@@ -527,6 +575,14 @@ class Batch:
         os.system(gdal_merge)
 
     def batch_clip_mosaic(self, pid):
+        """
+        Clips the mosaic to the ROI extent
+
+        Parameters
+        ----------
+            phy_id : int
+                roi_id number for the region to be processed.
+        """
 
         config = self.config
 
@@ -550,16 +606,24 @@ class Batch:
                          outputType=gdal.GDT_Byte, creationOptions=["NBITS=2"],
                          dstSRS=proj)
 
-    def batch_naip(self, pid, index, alg, smoothing=True, class_parameters=None):
+    def batch_naip(self, pid, index, alg, smoothing=True,
+                   class_parameters=None):
         """
         This function is a wrapper function run every step to make a canopy dataset.
-        Args:
-            phy_id: int ::  Physio Id for the region to be processed.
-            index: str :: Vegetation index to calculate with Rindcalc
-            alg: str :: Which classifiation algorithm to use
-                    Options :: "RF": Random Forests, "ET": Extra Trees
-            smoothing :: boolean : whether or not to apply a 3x3 median filter
-            class_parameters :: dict : Parameters to apply to classification
+        Parameters
+        ----------
+            phy_id : int
+                roi_id number for the region to be processed.
+            index : str, default="ARVI"
+                Which vegetation index to compute with rindcalc
+            alg: str
+                Which classifiation algorithm to use
+                "RF": Random Forests, "ET": Extra Trees
+            smoothing : bool
+                Whether or not to apply a 3x3 median filter
+            class_parameters : dict
+            Parameters to apply to classification
+
                 * Random Forests ::
                 {"n_estimators": 100, "criterion": 'gini', "max_depth": None,
                  "min_samples_split": 2, "min_samples_leaf": 1,
@@ -591,8 +655,3 @@ class Batch:
         self.batch_mosaic(pid)
         self.batch_clip_mosaic(pid)
         print('Finished')
-
-
-
-
-
