@@ -1,7 +1,8 @@
 # **CanoClass** 
 
-[CanoClass page](https://gislab.isnew.info/open_source_canopy_classification)
+[![Documentation Status](https://readthedocs.org/projects/canoclass/badge/?version=latest)](https://canoclass.readthedocs.io/en/latest/?badge=latest)
 
+[CanoClass gislab](https://gislab.isnew.info/open_source_canopy_classification)
 ## Overview
 
 `CanoClass` is a python module created to process large amounts of NAIP
