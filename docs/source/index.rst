@@ -20,7 +20,7 @@ At its core CanoClass is optimized to to solve canopy classification problems. I
    :maxdepth: 2
    :caption: Contents:
 
-   module
+   batch
 
 
 ..

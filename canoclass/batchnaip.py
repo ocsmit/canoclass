@@ -3,8 +3,8 @@
 # Author: Owen Smith, University of North Georgia
 # Canopy data creation config:
 # -----------------------------
-#       * All proccess functions rely on the configurations set within this
-#         file to run.
+# All proccess functions rely on the configurations set within this
+# file to run.
 #
 # ==============================================================================
 import os
@@ -54,6 +54,12 @@ class Batch:
             projection : str
                 The final projection the data will be in. Must follow
                 GDAL formating. eg: "EPSG:5070"
+
+        Attributes
+        ----------
+            config : dict
+                Dictionary of all config parameters
+
         """
 
         data_dir = "%s/Data" % workspace
@@ -165,7 +171,8 @@ class Batch:
                 Applies a 3x3 median filter to output classified raster.
             class_parameters : dict
                 arguments for Scikit-learns ET Classifier
-                {"n_estimators": 100, "criterion": 'gini', "max_depth": None,
+                {"n_estimators": 100, "criterion": 'gini', 
+                "max_depth": None,
                  "min_samples_split": 2, "min_samples_leaf": 1,
                  "min_weight_fraction_leaf": 0.0, "max_features": 'auto',
                  "max_leaf_nodes": None, "min_impurity_decrease": 0.0,
@@ -317,7 +324,9 @@ class Batch:
                 Applies a 3x3 median filter to output classified raster.
             class_parameters : dict
                 arguments for Scikit-learns ET Classifier
-                {"n_estimators": 100, "criterion": 'gini', "max_depth": None,
+                
+                {"n_estimators": 100, "criterion": 'gini',
+                 "max_depth": None,
                  "min_samples_split": 2, "min_samples_leaf": 1,
                  "min_weight_fraction_leaf": 0.0, "max_features": 'auto',
                  "max_leaf_nodes": None, "min_impurity_decrease": 0.0,
@@ -523,7 +532,8 @@ class Batch:
         """
         This function mosaics all classified NAIP tiles within a physiographic
         region using gdal_merge.py
-        ---
+
+
         Parameters
         ----------
             phy_id : int
@@ -610,6 +620,7 @@ class Batch:
                    class_parameters=None):
         """
         This function is a wrapper function run every step to make a canopy dataset.
+
         Parameters
         ----------
             phy_id : int
@@ -622,9 +633,10 @@ class Batch:
             smoothing : bool
                 Whether or not to apply a 3x3 median filter
             class_parameters : dict
-            Parameters to apply to classification
+                Parameters to apply to classification
 
-                * Random Forests ::
+                Random Forests :
+
                 {"n_estimators": 100, "criterion": 'gini', "max_depth": None,
                  "min_samples_split": 2, "min_samples_leaf": 1,
                  "min_weight_fraction_leaf": 0.0, "max_features": 'auto',
@@ -634,7 +646,8 @@ class Batch:
                  "verbose": 0, "warm_start": False, "class_weight": None,
                  "ccp_alpha": 0.0, "max_samples": None}
 
-                 * Extra Trees ::
+                Extra Trees :
+
                 {"n_estimators": 100, "criterion": 'gini', "max_depth": None,
                  "min_samples_split": 2, "min_samples_leaf": 1,
                  "min_weight_fraction_leaf": 0.0, "max_features": 'auto',
