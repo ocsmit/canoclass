@@ -6,8 +6,9 @@ from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.linear_model import PassiveAggressiveClassifier
 from sklearn.svm import SVC
 from skimage import io
-from texture import texture
+from .texture import texture
 import multiprocessing as mp
+
 
 class data_process:
 
