@@ -1,5 +1,5 @@
 import os
-from rindcalc import naip
+from rindcalc import NAIP
 
 
 def index(input_naip, out_naip, index='ARVI'):
@@ -19,6 +19,8 @@ def index(input_naip, out_naip, index='ARVI'):
     if not os.path.exists(input_naip):
         raise IOError('Path not found.')
     if os.path.exists(input_naip):
-        i = getattr(naip, index)(input_naip, out_naip)
+        i = NAIP(input_naip)
+        getattr(i, index)(out_naip)
 
     print('Finished')
+
