@@ -1,4 +1,4 @@
-# **CanoClass** 
+# CanoClass
 
 [![Documentation Status](https://readthedocs.org/projects/canoclass/badge/?version=latest)](https://canoclass.readthedocs.io/en/latest/?badge=latest)
 
@@ -18,8 +18,6 @@ process our data and no true method to tweak it to suit our needs.
 At its core CanoClass is optimized to to solve canopy classification problems.
 It is designed to be data agnostic with batch processing functions created to work with NAIP imagery, as scalable processing for NAIP imagery is necessary. 
 
-
-
 ## Dependencies
 
 - GDAL 
@@ -35,4 +33,10 @@ It is designed to be data agnostic with batch processing functions created to wo
 
 ## References
 
-Owen Smith, Huidae Cho, August 2021. An Open-Source Canopy Classification System Using Machine-Learning Techniques Within a Python Framework. [Free and Open Source Software for Geospatial (FOSS4G) 2021 Conference](https://2021.foss4g.org/). Online. [doi:10.5194/isprs-archives-XLVI-4-W2-2021-175-2021](https://doi.org/10.5194/isprs-archives-XLVI-4-W2-2021-175-2021).
+### Conference Proceedings
+
+Owen Smith, Huidae Cho, August 2021. An Open-Source Canopy Classification System Using Machine-Learning Techniques Within a Python Framework. The International Archives of the Photogrammetry, Remote Sensing and Spatial Information Sciences, XLVI-4/W2-2021, 175–182. [doi:10.5194/isprs-archives-XLVI-4-W2-2021-175-2021](https://doi.org/10.5194/isprs-archives-XLVI-4-W2-2021-175-2021).
+
+### Conference Presentations
+
+Owen Smith, Huidae Cho, September 30, 2021. CanoClass: Creation of an Open Framework for Tree Canopy Monitoring. [Free and Open Source Software for Geospatial (FOSS4G) 2021 Conference](https://2021.foss4g.org/). Online.
