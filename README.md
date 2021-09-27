@@ -39,4 +39,4 @@ Owen Smith, Huidae Cho, August 2021. An Open-Source Canopy Classification System
 
 ### Conference Presentations
 
-Owen Smith, Huidae Cho, September 30, 2021. CanoClass: Creation of an Open Framework for Tree Canopy Monitoring. [Free and Open Source Software for Geospatial (FOSS4G) 2021 Conference](https://2021.foss4g.org/). Online.
+Owen Smith, Huidae Cho, September 30, 2021. [CanoClass: Creation of an Open Framework for Tree Canopy Monitoring](https://callforpapers.2021.foss4g.org/foss4g2021/talk/ZAXQUS/). [Free and Open Source Software for Geospatial (FOSS4G) 2021 Conference](https://2021.foss4g.org/). Online.
