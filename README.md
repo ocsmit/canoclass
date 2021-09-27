@@ -3,6 +3,7 @@
 [![Documentation Status](https://readthedocs.org/projects/canoclass/badge/?version=latest)](https://canoclass.readthedocs.io/en/latest/?badge=latest)
 
 [CanoClass gislab](https://gislab.isnew.info/open_source_canopy_classification)
+
 ## Overview
 
 `CanoClass` is a python module created to process large amounts of NAIP
@@ -19,17 +20,19 @@ It is designed to be data agnostic with batch processing functions created to wo
 
 
 
-### Dependencies
+## Dependencies
 
 - GDAL 
 - NumPy
 - Scikit-learn
 - Rindcalc
 
-### Example
+## Examples
 
 ![NAIP_CANOCLASS](https://user-images.githubusercontent.com/55674113/88116578-d8b4b880-cb86-11ea-8a3b-7dd43bf5a0d0.png) 
 
 ![ET_CANOCLASS](https://user-images.githubusercontent.com/55674113/88116531-be7ada80-cb86-11ea-85fb-a2c9777142a7.png)
 
+## References
 
+Owen Smith, Huidae Cho, August 2021. An Open-Source Canopy Classification System Using Machine-Learning Techniques Within a Python Framework. [Free and Open Source Software for Geospatial (FOSS4G) 2021 Conference](https://2021.foss4g.org/). Online. [doi:10.5194/isprs-archives-XLVI-4-W2-2021-175-2021](https://doi.org/10.5194/isprs-archives-XLVI-4-W2-2021-175-2021).
